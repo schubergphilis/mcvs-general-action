@@ -14,7 +14,8 @@ jobs:
     strategy:
       matrix:
         args:
-          - testing-type: "lint-git"
+          - testing-type: lint-commit
+          - testing-type: lint-git
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4.1.1
