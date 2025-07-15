@@ -5,7 +5,7 @@ Create a `.github/workflows/general.yml` file with the following content:
 ```yml
 ---
 name: General
-"on": push
+"on": pull_request
 permissions:
   contents: read
   packages: read
@@ -16,6 +16,7 @@ jobs:
         args:
           - testing-type: lint-commit
           - testing-type: lint-git
+          - testing-type: yamllint
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4.1.1
@@ -23,3 +24,8 @@ jobs:
         with:
           testing-type: ${{ matrix.args.testing-type }}
 ```
+
+| Option           | Default | Required |
+| :--------------- | :------ | -------- |
+| testing-type     |         |          |
+| yamllint-version | x       |          |
