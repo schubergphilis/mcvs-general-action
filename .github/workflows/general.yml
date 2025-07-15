@@ -11,6 +11,7 @@ jobs:
         args:
           - testing-type: lint-commit
           - testing-type: lint-git
+          - testing-type: yamllint
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4.2.2
