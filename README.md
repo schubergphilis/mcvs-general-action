@@ -16,16 +16,20 @@ jobs:
         args:
           - testing-type: lint-commit
           - testing-type: lint-git
+          - testing-type: security-file-system
           - testing-type: yamllint
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4.1.1
-      - uses: schubergphilis/mcvs-general-action@v0.1.0
+      - uses: actions/checkout@v4.2.2
+      - uses: schubergphilis/mcvs-general-action@v0.4.0
         with:
           testing-type: ${{ matrix.args.testing-type }}
 ```
 
-| Option           | Default | Required |
-| :--------------- | :------ | -------- |
-| testing-type     |         |          |
-| yamllint-version | x       |          |
+| Option               | Default | Required |
+| :------------------- | :------ | -------- |
+| testing-type         |         |          |
+| token                | x       |          |
+| trivy-action-db      | x       |          |
+| trivy-action-java-db | x       |          |
+| yamllint-version     | x       |          |
