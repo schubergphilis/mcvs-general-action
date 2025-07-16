@@ -24,6 +24,7 @@ jobs:
       - uses: schubergphilis/mcvs-general-action@v0.4.0
         with:
           testing-type: ${{ matrix.args.testing-type }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 | Option               | Default | Required |
