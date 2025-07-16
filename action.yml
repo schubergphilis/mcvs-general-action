@@ -9,6 +9,18 @@ inputs:
   testing-type:
     description: |
       The testing type, e.g. integration, unit or some other.
+  token:
+    description: |
+      A token is required if the trivy-action-dbs have to be pulled from a
+      private registry.
+  trivy-action-db:
+    default: public.ecr.aws/aquasecurity/trivy-db:2
+    description: |
+      OCI repository to retrieve trivy-db from.
+  trivy-action-java-db:
+    default: public.ecr.aws/aquasecurity/trivy-java-db:1
+    description: |
+      OCI repository to retrieve trivy-java-db from.
 runs:
   using: "composite"
   steps:
@@ -105,6 +117,22 @@ runs:
         fi
         echo "✅ No fixup or squash commits found"
       shell: bash
+    - if: inputs.testing-type == 'security-file-system'
+      uses: 030/trivyignore-validator-action@v0.1.2
+    - env:
+        TRIVY_DB_REPOSITORY: ${{ inputs.trivy-action-db }}
+        TRIVY_JAVA_DB_REPOSITORY: ${{ inputs.trivy-action-java-db }}
+        TRIVY_PASSWORD: ${{ inputs.token }}
+        TRIVY_USERNAME: ${{ github.actor }}
+      if: inputs.testing-type == 'security-file-system'
+      uses: aquasecurity/trivy-action@0.32.0
+      with:
+        scan-type: fs
+        scan-ref: .
+        exit-code: 1
+        ignore-unfixed: true
+        severity: CRITICAL,HIGH
+        trivyignores: .trivyignore
     - if: inputs.testing-type == 'yamllint'
       run: |
         pip install --user yamllint==${{ inputs.yamllint-version }}
