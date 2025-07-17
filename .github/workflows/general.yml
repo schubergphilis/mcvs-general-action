@@ -11,6 +11,7 @@ jobs:
         args:
           - testing-type: lint-commit
           - testing-type: lint-git
+          - testing-type: security-file-system
           - testing-type: yamllint
     runs-on: ubuntu-24.04
     steps:
@@ -18,3 +19,4 @@ jobs:
       - uses: ./
         with:
           testing-type: ${{ matrix.args.testing-type }}
+          token: ${{ secrets.GITHUB_TOKEN }}

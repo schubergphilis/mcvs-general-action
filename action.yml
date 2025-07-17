@@ -22,7 +22,7 @@ inputs:
     description: |
       OCI repository to retrieve trivy-java-db from.
 runs:
-  using: "composite"
+  using: composite
   steps:
     - if: |
         github.event_name == 'pull_request' &&
