@@ -3,9 +3,6 @@ name: mcvs-general-action
 description: |
   The Mission Critical Vulnerability Scanner (MCVS) General action.
 inputs:
-  yamllint-version:
-    default: 1.37.1
-    description: The version of YAMLLint.
   testing-type:
     description: |
       The testing type, e.g. integration, unit or some other.
@@ -21,6 +18,11 @@ inputs:
     default: public.ecr.aws/aquasecurity/trivy-java-db:1
     description: |
       OCI repository to retrieve trivy-java-db from.
+  yamllint-version:
+    default: 1.37.1
+    description: The version of YAMLLint.
+  username-token:
+    description: The username associated with the token.
 runs:
   using: composite
   steps:
@@ -123,7 +125,7 @@ runs:
         TRIVY_DB_REPOSITORY: ${{ inputs.trivy-action-db }}
         TRIVY_JAVA_DB_REPOSITORY: ${{ inputs.trivy-action-java-db }}
         TRIVY_PASSWORD: ${{ inputs.token }}
-        TRIVY_USERNAME: ${{ github.actor }}
+        TRIVY_USERNAME: ${{ inputs.username-token }}
       if: inputs.testing-type == 'security-file-system'
       uses: aquasecurity/trivy-action@0.32.0
       with:

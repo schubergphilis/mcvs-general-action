@@ -21,16 +21,28 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4.2.2
-      - uses: schubergphilis/mcvs-general-action@v0.4.0
+      - uses: schubergphilis/mcvs-general-action@v0.5.1
         with:
           testing-type: ${{ matrix.args.testing-type }}
-          token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 | Option               | Default | Required |
 | :------------------- | :------ | -------- |
 | testing-type         |         |          |
-| token                | x       |          |
+| token                |         |          |
 | trivy-action-db      | x       |          |
 | trivy-action-java-db | x       |          |
 | yamllint-version     | x       |          |
+| username-token       |         |          |
+
+**Note:** To download TrivyDBs from a private registry, be sure to set both the
+token and the username-token.
+
+```yml
+steps:
+  - uses: actions/checkout@v4.2.2
+  - uses: schubergphilis/mcvs-general-action@v0.5.1
+    with:
+      token: ${{ secrets.GITHUB_TOKEN }}
+      username-token: ${{ github.actor }}
+```
