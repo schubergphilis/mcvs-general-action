@@ -30,7 +30,7 @@ runs:
         github.event_name == 'pull_request' &&
         (inputs.testing-type == 'lint-commit' ||
           inputs.testing-type == 'lint-git')
-      uses: actions/checkout@v6.0.0
+      uses: actions/checkout@v6.0.1
       with:
         fetch-depth: 0
         ref: ${{ github.event.pull_request.head.ref }}
