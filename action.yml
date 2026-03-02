@@ -18,6 +18,9 @@ inputs:
     default: public.ecr.aws/aquasecurity/trivy-java-db:1
     description: |
       OCI repository to retrieve trivy-java-db from.
+  trivy-version:
+    default: v0.69.2
+    description: The version of Trivy CLI used by aquasecurity/trivy-action.
   yamllint-version:
     default: 1.37.1
     description: The version of YAMLLint.
@@ -129,6 +132,7 @@ runs:
       if: inputs.testing-type == 'security-file-system'
       uses: aquasecurity/trivy-action@0.34.1
       with:
+        version: ${{ inputs.trivy-version }}
         scan-type: fs
         scan-ref: .
         exit-code: 1
