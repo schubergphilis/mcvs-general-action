@@ -32,6 +32,7 @@ jobs:
 | token                |         |          |
 | trivy-action-db      | x       |          |
 | trivy-action-java-db | x       |          |
+| trivy-version        | x       |          |
 | yamllint-version     | x       |          |
 | username-token       |         |          |
 
@@ -45,4 +46,15 @@ steps:
     with:
       token: ${{ secrets.GITHUB_TOKEN }}
       username-token: ${{ github.actor }}
+```
+
+To override the Trivy CLI version used by `aquasecurity/trivy-action`:
+
+```yml
+steps:
+  - uses: actions/checkout@v4.2.2
+  - uses: schubergphilis/mcvs-general-action@v0.5.1
+    with:
+      testing-type: security-file-system
+      trivy-version: v0.69.2
 ```
