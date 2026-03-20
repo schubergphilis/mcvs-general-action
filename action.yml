@@ -6,26 +6,9 @@ inputs:
   testing-type:
     description: |
       The testing type, e.g. integration, unit or some other.
-  token:
-    description: |
-      A token is required if the trivy-action-dbs have to be pulled from a
-      private registry.
-  trivy-action-db:
-    default: public.ecr.aws/aquasecurity/trivy-db:2
-    description: |
-      OCI repository to retrieve trivy-db from.
-  trivy-action-java-db:
-    default: public.ecr.aws/aquasecurity/trivy-java-db:1
-    description: |
-      OCI repository to retrieve trivy-java-db from.
-  trivy-version:
-    default: v0.69.2
-    description: The version of Trivy CLI used by aquasecurity/trivy-action.
   yamllint-version:
     default: 1.37.1
     description: The version of YAMLLint.
-  username-token:
-    description: The username associated with the token.
 runs:
   using: composite
   steps:
@@ -122,23 +105,6 @@ runs:
         fi
         echo "✅ No fixup or squash commits found"
       shell: bash
-    - if: inputs.testing-type == 'security-file-system'
-      uses: 030/trivyignore-validator-action@v0.1.2
-    - env:
-        TRIVY_DB_REPOSITORY: ${{ inputs.trivy-action-db }}
-        TRIVY_JAVA_DB_REPOSITORY: ${{ inputs.trivy-action-java-db }}
-        TRIVY_PASSWORD: ${{ inputs.token }}
-        TRIVY_USERNAME: ${{ inputs.username-token }}
-      if: inputs.testing-type == 'security-file-system'
-      uses: aquasecurity/trivy-action@v0.35.0
-      with:
-        version: ${{ inputs.trivy-version }}
-        scan-type: fs
-        scan-ref: .
-        exit-code: 1
-        ignore-unfixed: true
-        severity: CRITICAL,HIGH
-        trivyignores: .trivyignore
     - if: inputs.testing-type == 'yamllint'
       run: |
         pip install --user yamllint==${{ inputs.yamllint-version }}

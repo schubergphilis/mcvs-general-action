@@ -26,35 +26,7 @@ jobs:
           testing-type: ${{ matrix.args.testing-type }}
 ```
 
-| Option               | Default | Required |
-| :------------------- | :------ | -------- |
-| testing-type         |         |          |
-| token                |         |          |
-| trivy-action-db      | x       |          |
-| trivy-action-java-db | x       |          |
-| trivy-version        | x       |          |
-| yamllint-version     | x       |          |
-| username-token       |         |          |
-
-**Note:** To download TrivyDBs from a private registry, be sure to set both the
-token and the username-token.
-
-```yml
-steps:
-  - uses: actions/checkout@v4.2.2
-  - uses: schubergphilis/mcvs-general-action@v0.5.1
-    with:
-      token: ${{ secrets.GITHUB_TOKEN }}
-      username-token: ${{ github.actor }}
-```
-
-To override the Trivy CLI version used by `aquasecurity/trivy-action`:
-
-```yml
-steps:
-  - uses: actions/checkout@v4.2.2
-  - uses: schubergphilis/mcvs-general-action@v0.5.1
-    with:
-      testing-type: security-file-system
-      trivy-version: v0.69.2
-```
+| Option           | Default | Required |
+| :--------------- | :------ | -------- |
+| testing-type     |         |          |
+| yamllint-version | x       |          |
