@@ -34,6 +34,8 @@ The action supports four distinct testing modes, each triggered by the `testing-
 
 ### Hash-Pinned Dependencies
 
+#### Yamllint (Python)
+
 For security, Python dependencies are installed with `--require-hashes`. The yamllint installation uses a heredoc to create a requirements file:
 
 ```yaml
@@ -50,6 +52,21 @@ When updating versions:
 - Update the version input (e.g., `yamllint-version`)
 - Update the corresponding SHA256 hash input
 - Update all dependency versions and hashes together
+
+#### Commitlint (NPM)
+
+Commitlint dependencies are managed via `package.json` and `package-lock.json`. The action installs them using `npm ci`:
+
+```yaml
+npm ci --prefix ${GITHUB_ACTION_PATH}
+```
+
+When updating commitlint versions:
+
+- Update versions in `package.json`
+- Run `npm install` to regenerate `package-lock.json`
+- Commit both files together
+- The package-lock.json contains integrity hashes automatically
 
 ## Testing the Action
 

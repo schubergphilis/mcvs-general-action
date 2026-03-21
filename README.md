@@ -96,29 +96,11 @@ The following inputs allow customization of yamllint dependencies with hash pinn
 
 **Note**: These inputs are optional and only needed if you want to use different versions than the defaults. All dependencies are hash-pinned for security using `pip install --require-hashes`.
 
-### Advanced Inputs (commitlint customization)
-
-The following inputs allow customization of commitlint packages with integrity hash pinning for security:
-
-| Input                                      | Description                                 | Default                                                                                           |
-| :----------------------------------------- | :------------------------------------------ | :------------------------------------------------------------------------------------------------ |
-| commitlint-cli-version                     | Version of @commitlint/cli                  | `19.5.0`                                                                                          |
-| commitlint-cli-integrity                   | Integrity hash of @commitlint/cli           | `sha512-c7E1lMCjxf2Xfw4nVZ8tW2xh7m4zl3jzMkqW8kabZhDZi7/6SRpaEmnIfJP4xZM8rgo5/BcjGjO+tbrTV4Uh5w==` |
-| commitlint-config-conventional-version     | Version of @commitlint/config-conventional  | `19.5.0`                                                                                          |
-| commitlint-config-conventional-integrity   | Integrity hash of config-conventional       | `sha512-lCiHJSwKi4OWiL4S5tIZu7otRKrlWk8OVxklJoMcJXpT+5SAVEQzyarzZ3b68h7NIB5OzoSJmncJDBSlFKd1Fw==` |
-| commitlint-ensure-version                  | Version of @commitlint/ensure               | `19.5.0`                                                                                          |
-| commitlint-ensure-integrity                | Integrity hash of @commitlint/ensure        | `sha512-Kv0pYZeMrdg48bHFEU5KKk4eD+l0WSdkv4PzZO7ysv7nnwfCXlQSQVKF/19I8SfhPEYy7en5lcp+GH3ajSEimA==` |
-| commitlint-plugin-function-rules-version   | Version of commitlint-plugin-function-rules | `4.0.0`                                                                                           |
-| commitlint-plugin-function-rules-integrity | Integrity hash of function-rules plugin     | `sha512-JJGfgpvAm8ru34hylwkN4Q0Ab2KSP1RSfqtih+scTf7xRhbOjHFZxqC/jHBBMBg4WecKLZ0oDG/vJ0aHy5L7vg==` |
-
-**Note**: These inputs are optional and only needed if you want to use different versions than the defaults. All packages are integrity-verified for security using `npm ci` with package-lock.json.
-
 ## Security Considerations
 
 - All GitHub Actions are pinned to commit SHAs for security
-- Python dependencies are installed with `--require-hashes` flag
-- NPM packages are installed with integrity verification via `npm ci`
-- All dependency versions and hashes are verified during installation
+- Python dependencies (yamllint) are installed with `--require-hashes` flag for hash verification
+- NPM packages (commitlint) are installed via `npm ci` with package-lock.json for integrity verification
 
 ## License
 
