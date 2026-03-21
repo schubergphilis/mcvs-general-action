@@ -9,6 +9,21 @@ inputs:
   yamllint-version:
     default: 1.37.1
     description: The version of YAMLLint.
+  yamllint-sha256-hash:
+    default: 364f0d79e81409f591e323725e6a9f4504c8699ddf2d7263d8d2b539cd66a583
+    description: The sha256 hash of a certain yamllint package.
+  yamllint-dependency-pathspec-version:
+    default: 1.0.4
+    description: The version of pathspec.
+  yamllint-dependency-pathspec-sha256-hash:
+    default: fb6ae2fd4e7c921a165808a552060e722767cfa526f99ca5156ed2ce45a5c723
+    description: The sha256 hash of a certain pathspec package.
+  yamllint-dependency-pyyaml-version:
+    default: 6.0.3
+    description: The version of PyYAML.
+  yamllint-dependency-pyyaml-sha256-hash:
+    default: ba1cc08a7ccde2d2ec775841541641e4548226580ab850948cbfda66a1befcdc
+    description: The sha256 hash of a certain PyYAML package.
 runs:
   using: composite
   steps:
@@ -16,7 +31,7 @@ runs:
         github.event_name == 'pull_request' &&
         (inputs.testing-type == 'lint-commit' ||
           inputs.testing-type == 'lint-git')
-      uses: actions/checkout@v6.0.2
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       with:
         fetch-depth: 0
         ref: ${{ github.event.pull_request.head.ref }}
@@ -107,6 +122,13 @@ runs:
       shell: bash
     - if: inputs.testing-type == 'yamllint'
       run: |
-        pip install --user yamllint==${{ inputs.yamllint-version }}
+        # pip install \
+        #   --require-hashes \
+        #   --user \
+        #     yamllint==${{ inputs.yamllint-version }} \
+        #       --hash=sha256:${{ inputs.yamllint-sha256-hash }}
+        printf 'yamllint==${{ inputs.yamllint-version }} --hash=sha256:${{ inputs.yamllint-sha256-hash }}\npathspec==${{ inputs.yamllint-dependency-pathspec-version }} --hash=sha256:${{ inputs.yamllint-dependency-pathspec-sha256-hash }}\npyyaml==${{ inputs.yamllint-dependency-pyyaml-version }} --hash=sha256:${{ inputs.yamllint-dependency-pyyaml-sha256-hash }}\n' > /tmp/req.txt
+        cat /tmp/req.txt
+        python3 -m pip install --require-hashes --user -r /tmp/req.txt
         yamllint -c ${GITHUB_ACTION_PATH}/configs/yamllint.yaml .
       shell: bash
