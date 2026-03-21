@@ -122,12 +122,11 @@ runs:
       shell: bash
     - if: inputs.testing-type == 'yamllint'
       run: |
-        # pip install \
-        #   --require-hashes \
-        #   --user \
-        #     yamllint==${{ inputs.yamllint-version }} \
-        #       --hash=sha256:${{ inputs.yamllint-sha256-hash }}
-        printf 'yamllint==${{ inputs.yamllint-version }} --hash=sha256:${{ inputs.yamllint-sha256-hash }}\npathspec==${{ inputs.yamllint-dependency-pathspec-version }} --hash=sha256:${{ inputs.yamllint-dependency-pathspec-sha256-hash }}\npyyaml==${{ inputs.yamllint-dependency-pyyaml-version }} --hash=sha256:${{ inputs.yamllint-dependency-pyyaml-sha256-hash }}\n' > /tmp/req.txt
+        cat > /tmp/req.txt <<EOF
+        yamllint==${{ inputs.yamllint-version }} --hash=sha256:${{ inputs.yamllint-sha256-hash }}
+        pathspec==${{ inputs.yamllint-dependency-pathspec-version }} --hash=sha256:${{ inputs.yamllint-dependency-pathspec-sha256-hash }}
+        pyyaml==${{ inputs.yamllint-dependency-pyyaml-version }} --hash=sha256:${{ inputs.yamllint-dependency-pyyaml-sha256-hash }}
+        EOF
         cat /tmp/req.txt
         python3 -m pip install --require-hashes --user -r /tmp/req.txt
         yamllint -c ${GITHUB_ACTION_PATH}/configs/yamllint.yaml .
