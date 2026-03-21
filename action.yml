@@ -24,6 +24,30 @@ inputs:
   yamllint-dependency-pyyaml-sha256-hash:
     default: ba1cc08a7ccde2d2ec775841541641e4548226580ab850948cbfda66a1befcdc
     description: The sha256 hash of a certain PyYAML package.
+  commitlint-cli-version:
+    default: 19.5.0
+    description: The version of @commitlint/cli.
+  commitlint-cli-integrity:
+    default: sha512-c7E1lMCjxf2Xfw4nVZ8tW2xh7m4zl3jzMkqW8kabZhDZi7/6SRpaEmnIfJP4xZM8rgo5/BcjGjO+tbrTV4Uh5w== # yamllint disable-line rule:line-length
+    description: The integrity hash of @commitlint/cli package.
+  commitlint-config-conventional-version:
+    default: 19.5.0
+    description: The version of @commitlint/config-conventional.
+  commitlint-config-conventional-integrity:
+    default: sha512-lCiHJSwKi4OWiL4S5tIZu7otRKrlWk8OVxklJoMcJXpT+5SAVEQzyarzZ3b68h7NIB5OzoSJmncJDBSlFKd1Fw== # yamllint disable-line rule:line-length
+    description: The integrity hash of @commitlint/config-conventional package.
+  commitlint-ensure-version:
+    default: 19.5.0
+    description: The version of @commitlint/ensure.
+  commitlint-ensure-integrity:
+    default: sha512-Kv0pYZeMrdg48bHFEU5KKk4eD+l0WSdkv4PzZO7ysv7nnwfCXlQSQVKF/19I8SfhPEYy7en5lcp+GH3ajSEimA== # yamllint disable-line rule:line-length
+    description: The integrity hash of @commitlint/ensure package.
+  commitlint-plugin-function-rules-version:
+    default: 4.0.0
+    description: The version of commitlint-plugin-function-rules.
+  commitlint-plugin-function-rules-integrity:
+    default: sha512-JJGfgpvAm8ru34hylwkN4Q0Ab2KSP1RSfqtih+scTf7xRhbOjHFZxqC/jHBBMBg4WecKLZ0oDG/vJ0aHy5L7vg== # yamllint disable-line rule:line-length
+    description: The integrity hash of commitlint-plugin-function-rules package.
 runs:
   using: composite
   steps:
@@ -36,13 +60,65 @@ runs:
         fetch-depth: 0
         ref: ${{ github.event.pull_request.head.ref }}
         repository: ${{ github.event.pull_request.head.repo.full_name }}
+    # yamllint disable rule:line-length
     - if: |
         github.event_name == 'pull_request' &&
         inputs.testing-type == 'lint-commit'
       run: |
-        npm install --save-dev \
-          commitlint-plugin-function-rules \
-          @commitlint/{cli,config-conventional,ensure}
+        cat > package.json <<EOF
+        {
+          "devDependencies": {
+            "@commitlint/cli": "${{ inputs.commitlint-cli-version }}",
+            "@commitlint/config-conventional": "${{ inputs.commitlint-config-conventional-version }}",
+            "@commitlint/ensure": "${{ inputs.commitlint-ensure-version }}",
+            "commitlint-plugin-function-rules": "${{ inputs.commitlint-plugin-function-rules-version }}"
+          }
+        }
+        EOF
+
+        cat > package-lock.json <<EOF
+        {
+          "name": "commitlint-check",
+          "lockfileVersion": 3,
+          "requires": true,
+          "packages": {
+            "": {
+              "devDependencies": {
+                "@commitlint/cli": "${{ inputs.commitlint-cli-version }}",
+                "@commitlint/config-conventional": "${{ inputs.commitlint-config-conventional-version }}",
+                "@commitlint/ensure": "${{ inputs.commitlint-ensure-version }}",
+                "commitlint-plugin-function-rules": "${{ inputs.commitlint-plugin-function-rules-version }}"
+              }
+            },
+            "node_modules/@commitlint/cli": {
+              "version": "${{ inputs.commitlint-cli-version }}",
+              "resolved": "https://registry.npmjs.org/@commitlint/cli/-/cli-${{ inputs.commitlint-cli-version }}.tgz",
+              "integrity": "${{ inputs.commitlint-cli-integrity }}",
+              "dev": true
+            },
+            "node_modules/@commitlint/config-conventional": {
+              "version": "${{ inputs.commitlint-config-conventional-version }}",
+              "resolved": "https://registry.npmjs.org/@commitlint/config-conventional/-/config-conventional-${{ inputs.commitlint-config-conventional-version }}.tgz",
+              "integrity": "${{ inputs.commitlint-config-conventional-integrity }}",
+              "dev": true
+            },
+            "node_modules/@commitlint/ensure": {
+              "version": "${{ inputs.commitlint-ensure-version }}",
+              "resolved": "https://registry.npmjs.org/@commitlint/ensure/-/ensure-${{ inputs.commitlint-ensure-version }}.tgz",
+              "integrity": "${{ inputs.commitlint-ensure-integrity }}",
+              "dev": true
+            },
+            "node_modules/commitlint-plugin-function-rules": {
+              "version": "${{ inputs.commitlint-plugin-function-rules-version }}",
+              "resolved": "https://registry.npmjs.org/commitlint-plugin-function-rules/-/commitlint-plugin-function-rules-${{ inputs.commitlint-plugin-function-rules-version }}.tgz",
+              "integrity": "${{ inputs.commitlint-plugin-function-rules-integrity }}",
+              "dev": true
+            }
+          }
+        }
+        EOF
+
+        npm ci
 
         cat ${GITHUB_ACTION_PATH}/configs/commitlint.config.mjs > \
           commitlint.config.mjs
@@ -52,6 +128,7 @@ runs:
           --to ${{ github.event.pull_request.head.sha }} \
           --verbose
       shell: bash
+    # yamllint enable rule:line-length
     - if: |
         github.event_name == 'pull_request' &&
         inputs.testing-type == 'lint-git'
