@@ -36,22 +36,20 @@ runs:
         fetch-depth: 0
         ref: ${{ github.event.pull_request.head.ref }}
         repository: ${{ github.event.pull_request.head.repo.full_name }}
-    # yamllint disable rule:line-length
     - if: |
         github.event_name == 'pull_request' &&
         inputs.testing-type == 'lint-commit'
       run: |
-        npm ci --prefix ${GITHUB_ACTION_PATH}
+        CONFIGS_PATH="${GITHUB_ACTION_PATH}/configs"
 
-        cat ${GITHUB_ACTION_PATH}/configs/commitlint.config.mjs > \
-          commitlint.config.mjs
+        npm ci --prefix "${CONFIGS_PATH}"
 
-        npx commitlint \
+        npx --prefix "${CONFIGS_PATH}" commitlint \
+          --config "$CONFIGS_PATH/commitlint.config.mjs" \
           --from ${{ github.event.pull_request.base.sha }} \
           --to ${{ github.event.pull_request.head.sha }} \
           --verbose
       shell: bash
-    # yamllint enable rule:line-length
     - if: |
         github.event_name == 'pull_request' &&
         inputs.testing-type == 'lint-git'
