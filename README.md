@@ -11,6 +11,11 @@ The Mission Critical Vulnerability Scanner (MCVS) General Action provides automa
 
 ### Available Testing Types
 
+- **`lint-action`**: Validates GitHub Actions workflow files for security issues
+
+  - Uses [zizmor](https://github.com/zizmorcore/zizmor) to detect security vulnerabilities
+  - Checks at minimum `low` severity level
+
 - **`lint-commit`**: Validates commit messages follow [Conventional Commits](https://www.conventionalcommits.org/) format
 
   - Checks all commits in pull request range
@@ -23,13 +28,13 @@ The Mission Critical Vulnerability Scanner (MCVS) General Action provides automa
   - Detects and blocks unwanted merges of main into feature branches
   - Identifies fixup/squash commits that should be squashed before merge
 
+- **`security-file-system`**: Reserved for future use
+
 - **`yamllint`**: Validates YAML file formatting
 
   - Checks all YAML files against formatting standards
   - Uses hash-pinned dependencies for security
   - Configuration: `configs/yamllint.yaml`
-
-- **`security-file-system`**: (Not yet implemented - reserved for future use)
 
 ## Usage
 
@@ -49,10 +54,12 @@ jobs:
     strategy:
       matrix:
         args:
+          - testing-type: lint-action
           - testing-type: lint-commit
           - testing-type: lint-git
+          - testing-type: security-file-system
           - testing-type: yamllint
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - uses: schubergphilis/mcvs-general-action@v0.5.1
