@@ -3,6 +3,8 @@
 [![GitHub release](https://img.shields.io/github/v/release/schubergphilis/mcvs-general-action)](https://github.com/schubergphilis/mcvs-general-action/releases)
 [![License](https://img.shields.io/github/license/schubergphilis/mcvs-general-action)](LICENSE)
 
+<img src="./assets/logos/mcvs-general-action.png" width="250"></a>
+
 ## Overview
 
 The Mission Critical Vulnerability Scanner (MCVS) General Action provides automated security and quality checks for your GitHub repository. This composite action runs multiple validation tests to ensure code quality, security standards, and proper Git workflow practices.
