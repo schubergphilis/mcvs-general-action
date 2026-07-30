@@ -38,6 +38,14 @@ runs:
         repository: ${{ github.event.pull_request.head.repo.full_name }}
     - if: |
         github.event_name == 'pull_request' &&
+        inputs.testing-type == 'lint-action'
+      name: run zizmor 🌈
+      # yamllint disable-line rule:line-length
+      uses: zizmorcore/zizmor-action@6fc4b006235f201fdab3722e17240ab420d580e5 # v0.6.1
+      with:
+        min-severity: low
+    - if: |
+        github.event_name == 'pull_request' &&
         inputs.testing-type == 'lint-commit'
       run: |
         CONFIGS_PATH="${GITHUB_ACTION_PATH}/configs"
