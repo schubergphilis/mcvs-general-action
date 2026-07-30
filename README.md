@@ -1,4 +1,4 @@
-# MCVS-general-action
+# MCVS General Action
 
 [![GitHub release](https://img.shields.io/github/v/release/schubergphilis/mcvs-general-action)](https://github.com/schubergphilis/mcvs-general-action/releases)
 [![License](https://img.shields.io/github/license/schubergphilis/mcvs-general-action)](LICENSE)
@@ -64,6 +64,8 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
       - uses: schubergphilis/mcvs-general-action@v0.5.1
         with:
           testing-type: ${{ matrix.args.testing-type }}
