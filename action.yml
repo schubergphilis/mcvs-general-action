@@ -24,6 +24,9 @@ inputs:
   yamllint-dependency-pyyaml-sha256-hash:
     default: ba1cc08a7ccde2d2ec775841541641e4548226580ab850948cbfda66a1befcdc
     description: The sha256 hash of a certain PyYAML package.
+  zizmor-action-advanced-security:
+    default: "true"
+    description: Upload results to Advanced Security or not.
 runs:
   using: composite
   steps:
@@ -43,6 +46,7 @@ runs:
       # yamllint disable-line rule:line-length
       uses: zizmorcore/zizmor-action@6fc4b006235f201fdab3722e17240ab420d580e5 # v0.6.1
       with:
+        advanced-security: ${{ inputs.zizmor-action-advanced-security }}
         min-severity: low
     - if: |
         github.event_name == 'pull_request' &&
