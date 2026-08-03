@@ -14,18 +14,15 @@ The Mission Critical Vulnerability Scanner (MCVS) General Action provides automa
 ### Available Testing Types
 
 - **`lint-action`**: Validates GitHub Actions workflow files for security issues
-
   - Uses [zizmor](https://github.com/zizmorcore/zizmor) to detect security vulnerabilities
   - Checks at minimum `low` severity level
 
 - **`lint-commit`**: Validates commit messages follow [Conventional Commits](https://www.conventionalcommits.org/) format
-
   - Checks all commits in pull request range
   - Enforces conventional commit standards (feat, fix, docs, etc.)
   - Configuration: `configs/commitlint.config.mjs`
 
 - **`lint-git`**: Enforces Git workflow best practices
-
   - Ensures feature branch is up-to-date with main (no commits behind)
   - Detects and blocks unwanted merges of main into feature branches
   - Identifies fixup/squash commits that should be squashed before merge
@@ -33,7 +30,6 @@ The Mission Critical Vulnerability Scanner (MCVS) General Action provides automa
 - **`security-file-system`**: Reserved for future use
 
 - **`yamllint`**: Validates YAML file formatting
-
   - Checks all YAML files against formatting standards
   - Uses hash-pinned dependencies for security
   - Configuration: `configs/yamllint.yaml`
@@ -88,9 +84,10 @@ jobs:
 
 ## Inputs
 
-| Input        | Description                                       | Required | Default |
-| :----------- | :------------------------------------------------ | :------- | :------ |
-| testing-type | Type of test to run (see Available Testing Types) | Yes      | N/A     |
+| Input                           | Description                                       | Required | Default |
+| :------------------------------ | :------------------------------------------------ | :------- | :------ |
+| testing-type                    | Type of test to run (see Available Testing Types) | Yes      | N/A     |
+| zizmor-action-advanced-security | Disable advanced security report upload           | No       | true    |
 
 ### Advanced Inputs (yamllint customization)
 
