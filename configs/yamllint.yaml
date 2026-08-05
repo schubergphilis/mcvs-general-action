@@ -1,5 +1,7 @@
 ---
 extends: default
+ignore:
+  - openspec
 rules:
   comments:
     min-spaces-from-content: 1
