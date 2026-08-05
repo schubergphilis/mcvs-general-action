@@ -14,7 +14,8 @@ The action is defined in `action.yml` as a composite action (not a Docker or Jav
 
 ### Testing Types
 
-The action supports four distinct testing modes, each triggered by the `testing-type` input:
+The action implements four distinct testing modes, each triggered by the
+`testing-type` input:
 
 1. **lint-commit**: Validates commit messages using commitlint
    - Uses `@commitlint/config-conventional` for conventional commits format
@@ -26,47 +27,70 @@ The action supports four distinct testing modes, each triggered by the `testing-
    - Detects unwanted merges of main into feature branch
    - Identifies fixup/squash commits that should be squashed
 
-1. **security-file-system**: (Implementation details in action.yml)
+1. **lint-action**: Scans GitHub Actions workflows with
+   [zizmor](https://github.com/zizmorcore/zizmor-action)
+   - Runs `zizmorcore/zizmor-action` with `min-severity: low`
+   - `advanced-security` is controlled by the
+     `zizmor-action-advanced-security` input (default `"true"`)
 
 1. **yamllint**: Validates YAML file formatting
    - Uses hash-pinned dependencies for security (see below)
    - Configuration: `configs/yamllint.yaml`
 
+> **Note:** The self-testing matrix in `.github/workflows/general.yml` also
+> lists a `security-file-system` testing-type, but `action.yml` has **no
+> implementing step** for it, so that matrix job is currently a no-op. Add a
+> corresponding `if: inputs.testing-type == 'security-file-system'` block to
+> `action.yml` before relying on it (or remove it from the matrix).
+
 ### Hash-Pinned Dependencies
 
 #### Yamllint (Python)
 
-For security, Python dependencies are installed with `--require-hashes`. The yamllint installation uses a heredoc to create a requirements file:
+For security, Python dependencies are installed with `--require-hashes`. The
+versions and hashes are supplied via action **inputs** (with defaults set in
+`action.yml`), and the yamllint step templates them into a requirements file
+using a heredoc:
 
 ```yaml
 cat > /tmp/req.txt <<EOF
-yamllint==<version> --hash=sha256:<hash>
-pathspec==<version> --hash=sha256:<hash>
-pyyaml==<version> --hash=sha256:<hash>
+yamllint==${{ inputs.yamllint-version }} --hash=sha256:${{ inputs.yamllint-sha256-hash }}
+pathspec==${{ inputs.yamllint-dependency-pathspec-version }} --hash=sha256:${{ inputs.yamllint-dependency-pathspec-sha256-hash }}
+pyyaml==${{ inputs.yamllint-dependency-pyyaml-version }} --hash=sha256:${{ inputs.yamllint-dependency-pyyaml-sha256-hash }}
 EOF
 python3 -m pip install --require-hashes --user -r /tmp/req.txt
 ```
 
+The relevant inputs (see `action.yml`) are:
+
+- `yamllint-version` / `yamllint-sha256-hash`
+- `yamllint-dependency-pathspec-version` / `yamllint-dependency-pathspec-sha256-hash`
+- `yamllint-dependency-pyyaml-version` / `yamllint-dependency-pyyaml-sha256-hash`
+
 When updating versions:
 
-- Update the version input (e.g., `yamllint-version`)
-- Update the corresponding SHA256 hash input
+- Update the version default (e.g., `yamllint-version`)
+- Update the corresponding SHA256 hash default
 - Update all dependency versions and hashes together
 
 #### Commitlint (NPM)
 
-Commitlint dependencies are managed via `package.json` and `package-lock.json`. The action installs them using `npm ci`:
+Commitlint dependencies are managed via `configs/package.json` and
+`configs/package-lock.json`. The action installs them using `npm ci`, scoped to
+the `configs/` directory:
 
 ```yaml
-npm ci --prefix ${GITHUB_ACTION_PATH}
+CONFIGS_PATH="${GITHUB_ACTION_PATH}/configs"
+npm ci --prefix "${CONFIGS_PATH}"
+npx --prefix "${CONFIGS_PATH}" commitlint --config "$CONFIGS_PATH/commitlint.config.mjs" ...
 ```
 
 When updating commitlint versions:
 
-- Update versions in `package.json`
-- Run `npm install` to regenerate `package-lock.json`
+- Update versions in `configs/package.json`
+- Run `npm install --prefix configs` to regenerate `configs/package-lock.json`
 - Commit both files together
-- The package-lock.json contains integrity hashes automatically
+- The `package-lock.json` contains integrity hashes automatically
 
 ## Testing the Action
 
@@ -128,6 +152,7 @@ Configuration enforces this via commitlint in `configs/commitlint.config.mjs`.
 
 - `action.yml`: Main action definition with all testing logic
 - `configs/commitlint.config.mjs`: Commit message linting rules
+- `configs/package.json` / `configs/package-lock.json`: Commitlint dependencies
 - `configs/yamllint.yaml`: YAML formatting rules
 - `.github/workflows/general.yml`: Self-testing workflow
 - `.github/workflows/mcvs-pr-validation.yml`: Additional PR validation
