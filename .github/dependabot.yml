@@ -11,6 +11,16 @@ updates:
       github-actions-all:
         patterns:
           - "*"
+  - package-ecosystem: pip
+    directory: /configs
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 5
+    groups:
+      pip-all:
+        patterns:
+          - "*"
   - package-ecosystem: npm
     directory: /configs
     schedule:

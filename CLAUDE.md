@@ -47,31 +47,22 @@ The action implements four distinct testing modes, each triggered by the
 
 #### Yamllint (Python)
 
-For security, Python dependencies are installed with `--require-hashes`. The
-versions and hashes are supplied via action **inputs** (with defaults set in
-`action.yml`), and the yamllint step templates them into a requirements file
-using a heredoc:
+For security, Python dependencies are installed with `--require-hashes` from
+`configs/requirements.txt`:
 
 ```yaml
-cat > /tmp/req.txt <<EOF
-yamllint==${{ inputs.yamllint-version }} --hash=sha256:${{ inputs.yamllint-sha256-hash }}
-pathspec==${{ inputs.yamllint-dependency-pathspec-version }} --hash=sha256:${{ inputs.yamllint-dependency-pathspec-sha256-hash }}
-pyyaml==${{ inputs.yamllint-dependency-pyyaml-version }} --hash=sha256:${{ inputs.yamllint-dependency-pyyaml-sha256-hash }}
-EOF
-python3 -m pip install --require-hashes --user -r /tmp/req.txt
+python3 -m pip install --require-hashes --user \
+  -r "${GITHUB_ACTION_PATH}/configs/requirements.txt"
 ```
 
-The relevant inputs (see `action.yml`) are:
+Dependabot owns this file (`package-ecosystem: pip`, `directory: /configs` in
+`.github/dependabot.yml`), so version and hash bumps arrive as PRs. To change a
+pin by hand, edit `configs/requirements.txt` and update the version and its
+`--hash=sha256:` together.
 
-- `yamllint-version` / `yamllint-sha256-hash`
-- `yamllint-dependency-pathspec-version` / `yamllint-dependency-pathspec-sha256-hash`
-- `yamllint-dependency-pyyaml-version` / `yamllint-dependency-pyyaml-sha256-hash`
-
-When updating versions:
-
-- Update the version default (e.g., `yamllint-version`)
-- Update the corresponding SHA256 hash default
-- Update all dependency versions and hashes together
+Note: the pinned pyyaml wheel is `cp312 manylinux x86_64`. It is tied to the
+Python version and architecture of the runner, currently `ubuntu-24.04`.
+Changing runners means re-pinning that hash.
 
 #### Commitlint (NPM)
 
