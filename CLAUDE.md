@@ -48,17 +48,8 @@ The action implements four distinct testing modes, each triggered by the
 #### Yamllint (Python)
 
 For security, Python dependencies are installed with `--require-hashes` from
-`configs/requirements.txt`:
-
-```yaml
-python3 -m pip install --require-hashes --user \
-  -r "${GITHUB_ACTION_PATH}/configs/requirements.txt"
-```
-
-Dependabot owns this file (`package-ecosystem: pip`, `directory: /configs` in
-`.github/dependabot.yml`), so version and hash bumps arrive as PRs. To change a
-pin by hand, edit `configs/requirements.txt` and update the version and its
-`--hash=sha256:` together.
+`configs/requirements.txt`, which Dependabot keeps current
+(`package-ecosystem: pip`, `directory: /configs`).
 
 Note: the pinned pyyaml wheel is `cp312 manylinux x86_64`. It is tied to the
 Python version and architecture of the runner, currently `ubuntu-24.04`.

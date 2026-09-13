@@ -89,17 +89,11 @@ jobs:
 | testing-type                    | Type of test to run (see Available Testing Types) | Yes      | N/A     |
 | zizmor-action-advanced-security | Disable advanced security report upload           | No       | true    |
 
-### yamllint dependencies
-
-yamllint and its dependencies are pinned with SHA256 hashes in
-[`configs/requirements.txt`](configs/requirements.txt) and installed with
-`pip install --require-hashes`. Dependabot keeps that file up to date; there
-are no version or hash inputs to override.
-
 ## Security Considerations
 
 - All GitHub Actions are pinned to commit SHAs for security
-- Python dependencies (yamllint) are installed with `--require-hashes` flag for hash verification
+- Python dependencies (yamllint) are installed with `--require-hashes` from
+  [`configs/requirements.txt`](configs/requirements.txt)
 - NPM packages (commitlint) are installed via `npm ci` with package-lock.json for integrity verification
 
 ## License

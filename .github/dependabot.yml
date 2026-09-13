@@ -6,7 +6,7 @@ updates:
     schedule:
       interval: weekly
     cooldown:
-      default-days: 7
+      default-days: 5
     groups:
       github-actions-all:
         patterns:
@@ -16,7 +16,7 @@ updates:
     schedule:
       interval: weekly
     cooldown:
-      default-days: 7
+      default-days: 5
     groups:
       pip-all:
         patterns:
@@ -26,7 +26,7 @@ updates:
     schedule:
       interval: weekly
     cooldown:
-      default-days: 7
+      default-days: 5
     groups:
       github-actions-all:
         patterns:
