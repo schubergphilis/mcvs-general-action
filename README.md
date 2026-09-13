@@ -3,7 +3,7 @@
 [![GitHub release](https://img.shields.io/github/v/release/schubergphilis/mcvs-general-action)](https://github.com/schubergphilis/mcvs-general-action/releases)
 [![License](https://img.shields.io/github/license/schubergphilis/mcvs-general-action)](LICENSE)
 
-<img src="./assets/logos/mcvs-general-action.png" width="250"></a>
+<img src="./assets/logos/mcvs-general-action.png" alt="MCVS General Action logo" width="250">
 
 ## Overview
 
@@ -26,6 +26,15 @@ The Mission Critical Vulnerability Scanner (MCVS) General Action provides automa
   - Ensures feature branch is up-to-date with main (no commits behind)
   - Detects and blocks unwanted merges of main into feature branches
   - Identifies fixup/squash commits that should be squashed before merge
+
+- **`lychee`**: Checks that links in Markdown, HTML and reStructuredText
+  files resolve
+  - Uses [lychee](https://github.com/lycheeverse/lychee)
+  - Fails the job on a broken link and writes a summary to the job page
+
+- **`markdownlint`**: Validates Markdown formatting
+  - Uses [markdownlint](https://github.com/DavidAnson/markdownlint)
+  - Configuration: `configs/mcvs.markdownlint.yaml`
 
 - **`yamllint`**: Validates YAML file formatting
   - Checks all YAML files against formatting standards
@@ -53,6 +62,8 @@ jobs:
           - testing-type: lint-action
           - testing-type: lint-commit
           - testing-type: lint-git
+          - testing-type: lychee
+          - testing-type: markdownlint
           - testing-type: yamllint
     runs-on: ubuntu-24.04
     steps:

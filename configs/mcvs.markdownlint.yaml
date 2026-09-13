@@ -1,0 +1,7 @@
+---
+# Prose here is hand-wrapped and tables cannot wrap at all.
+MD013: false
+# The logo needs an <img> tag for its width attribute.
+MD033:
+  allowed_elements:
+    - img
