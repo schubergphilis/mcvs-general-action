@@ -14,7 +14,7 @@ The action is defined in `action.yml` as a composite action (not a Docker or Jav
 
 ### Testing Types
 
-The action implements four distinct testing modes, each triggered by the
+The action implements six distinct testing modes, each triggered by the
 `testing-type` input:
 
 1. **lint-commit**: Validates commit messages using commitlint
@@ -32,6 +32,17 @@ The action implements four distinct testing modes, each triggered by the
    - Runs `zizmorcore/zizmor-action` with `min-severity: low`
    - `advanced-security` is controlled by the
      `zizmor-action-advanced-security` input (default `"true"`)
+
+1. **lychee**: Checks links in Markdown, HTML and reStructuredText files with
+   [lychee](https://github.com/lycheeverse/lychee)
+   - Runs `lycheeverse/lychee-action` on its defaults, which already fail the
+     job on a broken link
+
+1. **markdownlint**: Validates Markdown formatting with
+   [markdownlint](https://github.com/DavidAnson/markdownlint)
+   - Runs `DavidAnson/markdownlint-cli2-action` over `**/*.md`, excluding
+     `node_modules`, which markdownlint-cli2 does not skip on its own
+   - Configuration: `configs/mcvs.markdownlint.yaml`
 
 1. **yamllint**: Validates YAML file formatting
    - Uses hash-pinned dependencies for security (see below)
@@ -153,6 +164,7 @@ Configuration enforces this via commitlint in `configs/commitlint.config.mjs`.
 - `action.yml`: Main action definition with all testing logic
 - `configs/commitlint.config.mjs`: Commit message linting rules
 - `configs/package.json` / `configs/package-lock.json`: Commitlint dependencies
+- `configs/mcvs.markdownlint.yaml`: Markdown formatting rules
 - `configs/yamllint.yaml`: YAML formatting rules
 - `.github/workflows/general.yml`: Self-testing workflow
 - `.github/workflows/mcvs-pr-validation.yml`: Additional PR validation

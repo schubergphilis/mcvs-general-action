@@ -12,6 +12,8 @@ jobs:
           - testing-type: lint-action
           - testing-type: lint-commit
           - testing-type: lint-git
+          - testing-type: lychee
+          - testing-type: markdownlint
           - testing-type: security-file-system
           - testing-type: yamllint
     runs-on: ubuntu-24.04
