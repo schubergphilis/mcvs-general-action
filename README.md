@@ -27,8 +27,6 @@ The Mission Critical Vulnerability Scanner (MCVS) General Action provides automa
   - Detects and blocks unwanted merges of main into feature branches
   - Identifies fixup/squash commits that should be squashed before merge
 
-- **`security-file-system`**: Reserved for future use
-
 - **`yamllint`**: Validates YAML file formatting
   - Checks all YAML files against formatting standards
   - Uses hash-pinned dependencies for security
@@ -55,7 +53,6 @@ jobs:
           - testing-type: lint-action
           - testing-type: lint-commit
           - testing-type: lint-git
-          - testing-type: security-file-system
           - testing-type: yamllint
     runs-on: ubuntu-24.04
     steps:
