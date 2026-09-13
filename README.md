@@ -89,25 +89,11 @@ jobs:
 | testing-type                    | Type of test to run (see Available Testing Types) | Yes      | N/A     |
 | zizmor-action-advanced-security | Disable advanced security report upload           | No       | true    |
 
-### Advanced Inputs (yamllint customization)
-
-The following inputs allow customization of yamllint dependencies with hash pinning for security:
-
-| Input                                    | Description             | Default                                                            |
-| :--------------------------------------- | :---------------------- | :----------------------------------------------------------------- |
-| yamllint-version                         | Version of yamllint     | `1.37.1`                                                           |
-| yamllint-sha256-hash                     | SHA256 hash of yamllint | `364f0d79e81409f591e323725e6a9f4504c8699ddf2d7263d8d2b539cd66a583` |
-| yamllint-dependency-pathspec-version     | Version of pathspec     | `1.0.4`                                                            |
-| yamllint-dependency-pathspec-sha256-hash | SHA256 hash of pathspec | `fb6ae2fd4e7c921a165808a552060e722767cfa526f99ca5156ed2ce45a5c723` |
-| yamllint-dependency-pyyaml-version       | Version of PyYAML       | `6.0.3`                                                            |
-| yamllint-dependency-pyyaml-sha256-hash   | SHA256 hash of PyYAML   | `ba1cc08a7ccde2d2ec775841541641e4548226580ab850948cbfda66a1befcdc` |
-
-**Note**: These inputs are optional and only needed if you want to use different versions than the defaults. All dependencies are hash-pinned for security using `pip install --require-hashes`.
-
 ## Security Considerations
 
 - All GitHub Actions are pinned to commit SHAs for security
-- Python dependencies (yamllint) are installed with `--require-hashes` flag for hash verification
+- Python dependencies (yamllint) are installed with `--require-hashes` from
+  [`configs/requirements.txt`](configs/requirements.txt)
 - NPM packages (commitlint) are installed via `npm ci` with package-lock.json for integrity verification
 
 ## License
