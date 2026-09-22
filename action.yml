@@ -66,14 +66,6 @@ runs:
         github.event_name == 'pull_request' &&
         inputs.testing-type == 'lint-git'
       run: |
-        git fetch origin main
-        git checkout main
-        git checkout ${{ github.event.pull_request.head.ref }}
-      shell: bash
-    - if: |
-        github.event_name == 'pull_request' &&
-        inputs.testing-type == 'lint-git'
-      run: |
         commits_behind=$(git rev-list --count HEAD..origin/main)
         if (( commits_behind > 0 )); then
           echo "❗ Branch is behind main by $commits_behind commits"
@@ -91,12 +83,7 @@ runs:
 
         current_branch=$(git rev-parse --abbrev-ref HEAD)
 
-        if [[ "${current_branch}" == "${MAIN_BRANCH}" ]]; then
-          echo "Already on ${MAIN_BRANCH}, nothing to check."
-          exit 0
-        fi
-
-        commits=$(git rev-list $MAIN_BRANCH..HEAD --merges)
+        commits=$(git rev-list "${REMOTE}/${MAIN_BRANCH}..HEAD" --merges)
 
         for sha in $commits; do
           p1=$(git rev-parse "$sha^1")
