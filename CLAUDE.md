@@ -132,7 +132,9 @@ The action tests itself using `.github/workflows/general.yml`, which:
 
 - Runs on pull requests
 - Uses a matrix strategy to test all testing-types
-- Uses the action from the current checkout (`uses: ./`)
+- Uses the action from the current checkout with GitHub's self-repository
+  syntax (`uses: $/`, not `uses: ./`, which zizmor's `self-repository` audit
+  rejects because it is subject to runtime filesystem state)
 
 To test changes locally:
 
