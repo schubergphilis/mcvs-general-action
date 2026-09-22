@@ -23,8 +23,12 @@ The Mission Critical Vulnerability Scanner (MCVS) General Action provides automa
   - Configuration: `configs/commitlint.config.mjs`
 
 - **`lint-git`**: Enforces Git workflow best practices
-  - Ensures feature branch is up-to-date with main (no commits behind)
-  - Detects and blocks unwanted merges of main into feature branches
+  - Ensures the feature branch is up-to-date with the pull request base
+    branch (no commits behind)
+  - Detects and blocks unwanted merges of the base branch into feature
+    branches
+  - Compares against the base branch as fetched from the base repository, so
+    the checks cannot be bypassed from a fork
   - Identifies fixup/squash commits that should be squashed before merge
 
 - **`lychee`**: Checks that links in Markdown, HTML and reStructuredText
