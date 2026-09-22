@@ -54,6 +54,24 @@ The action implements six distinct testing modes, each triggered by the
    - Uses hash-pinned dependencies for security (see below)
    - Configuration: `configs/yamllint.yaml`
 
+### Tagging on Push to the Default Branch
+
+Two steps at the end of `action.yml` run on `push` to the default branch,
+gated by the `tag-enabled` input (default `"true"`) instead of by
+`testing-type`. They check out the full history and then compute the next
+version with `scripts/next-version.sh`, which reads NUL-separated commit
+messages on stdin and prints `vX.Y.Z` (nothing when no commit warrants a
+release). `feat!:`/`BREAKING CHANGE:` bumps the major even below `1.0.0`.
+
+The release is created with `gh release create "$tag" --target
+"$GITHUB_SHA" --generate-notes`, which creates the tag as a side effect.
+Never replace this with `git push origin "$tag"`: the workspace checkout
+uses `persist-credentials: false` and has no pushable remote. The step is a
+no-op when the computed tag already exists, so reruns are safe.
+
+Self-tested by `.github/workflows/tag.yml`. The bump logic has a runnable
+check: `bash scripts/next-version_test.sh`.
+
 ### Hash-Pinned Dependencies
 
 #### Yamllint (Python)
@@ -144,11 +162,14 @@ Configuration enforces this via commitlint in `configs/commitlint.config.mjs`.
 ## Configuration Files
 
 - `action.yml`: Main action definition with all testing logic
+- `scripts/next-version.sh`: Conventional-commit semver bump, with
+  `scripts/next-version_test.sh` as its self-check
 - `configs/commitlint.config.mjs`: Commit message linting rules
 - `configs/package.json` / `configs/package-lock.json`: Commitlint dependencies
 - `configs/mcvs.markdownlint.yaml`: Markdown formatting rules
 - `configs/yamllint.yaml`: YAML formatting rules
 - `.github/workflows/general.yml`: Self-testing workflow
+- `.github/workflows/tag.yml`: Self-testing workflow for tagging
 - `.github/workflows/mcvs-pr-validation.yml`: Additional PR validation
 
 ## Modifying Testing Logic
