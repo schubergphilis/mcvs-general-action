@@ -62,8 +62,13 @@ The bump is derived from the Conventional Commit messages since the latest
 | `fix:`, `perf:`                         | patch  | `0.5.1` → `0.5.2` |
 | anything else only                      | no tag | —                 |
 
-Breaking changes bump the major even below `1.0.0`. When the computed tag
-already exists the step is a no-op, so a rerun cannot clobber a release.
+Breaking changes bump the major even below `1.0.0`. When the version is
+already released the step is a no-op, so a rerun cannot clobber a release.
+
+Because this is on by default and is not tied to a `testing-type`, a
+repository that already calls this action on a push to its default branch —
+for `yamllint`, for instance — starts creating tags and releases after
+upgrading. Set `tag-enabled: "false"` to opt out.
 
 ## Usage
 
@@ -125,6 +130,9 @@ name: tag
   push:
     branches:
       - main
+concurrency:
+  cancel-in-progress: false
+  group: tag
 permissions:
   contents: read
 jobs:
@@ -139,9 +147,10 @@ jobs:
       - uses: schubergphilis/mcvs-general-action@v0.7.0
 ```
 
-The job needs `contents: write`. Keep it in its own workflow rather than
-adding it to the pull request matrix, otherwise every matrix job races to
-create the same tag.
+The job needs `contents: write`, and the `concurrency` group serialises two
+pushes that land in quick succession. Keep it in its own workflow rather
+than adding it to the pull request matrix, otherwise every matrix job races
+to create the same tag.
 
 ## Inputs
 

@@ -63,14 +63,35 @@ version with `scripts/next-version.sh`, which reads NUL-separated commit
 messages on stdin and prints `vX.Y.Z` (nothing when no commit warrants a
 release). `feat!:`/`BREAKING CHANGE:` bumps the major even below `1.0.0`.
 
+Three things in this step are load-bearing and have each already caused a
+bug:
+
+- Feed the script with `git log -z --format=%B`, never `--format=%B%x00`.
+  The latter writes a newline *after* every NUL, so every record but the
+  first arrives with a leading newline, loses its subject and is silently
+  classified as no bump. The script strips that newline defensively, and
+  `scripts/next-version_test.sh` covers both framings.
+- The read loop must not `break`. Closing stdin early makes `git log` die of
+  SIGPIPE once its output passes the pipe buffer, and `shell: bash` runs
+  with `-eo pipefail`, so the step fails with 141 instead of releasing.
+- Pick the baseline tag with `git tag --merged HEAD --list "v*"
+  --sort=-v:refname` filtered through a strict regex, not with `git
+  describe --match`. `--match` is an fnmatch glob that also accepts
+  `v1.0.0-rc1`, which the script rejects, failing every push to main. Use a
+  here-string rather than piping into `grep -m1`, or grep's early exit
+  SIGPIPEs `git tag`.
+
 The release is created with `gh release create "$tag" --target
 "$GITHUB_SHA" --generate-notes`, which creates the tag as a side effect.
 Never replace this with `git push origin "$tag"`: the workspace checkout
-uses `persist-credentials: false` and has no pushable remote. The step is a
-no-op when the computed tag already exists, so reruns are safe.
+uses `persist-credentials: false` and has no pushable remote. The guard
+checks the *release*, not the tag, so a tag left behind by a half-finished
+run still gets one.
 
-Self-tested by `.github/workflows/tag.yml`. The bump logic has a runnable
-check: `bash scripts/next-version_test.sh`.
+Self-tested by `.github/workflows/tag.yml`, which needs a `concurrency`
+group so two quick pushes do not race. The bump logic has a runnable check:
+`bash scripts/next-version_test.sh`, which builds throwaway repositories so
+it exercises real `git log` output.
 
 ### Hash-Pinned Dependencies
 

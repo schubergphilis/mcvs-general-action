@@ -166,10 +166,15 @@ runs:
       env:
         GH_TOKEN: ${{ github.token }}
       run: |
-        last_tag=$(git describe --tags --abbrev=0 \
-          --match "v[0-9]*.[0-9]*.[0-9]*" 2>/dev/null || true)
+        # The highest reachable vX.Y.Z tag. --match is an fnmatch glob, so
+        # it would also accept v1.0.0-rc1, which the version bump cannot
+        # parse; grep on a here-string instead, because grep -m1 in a pipe
+        # would SIGPIPE git on a repository with many tags.
+        tags=$(git tag --merged HEAD --list "v*" --sort=-v:refname)
+        last_tag=$(grep -m1 -E "^v[0-9]+\.[0-9]+\.[0-9]+$" <<<"$tags" ||
+          true)
 
-        tag=$(git log --format=%B%x00 "${last_tag:+${last_tag}..}HEAD" |
+        tag=$(git log -z --format=%B "${last_tag:+${last_tag}..}HEAD" |
           bash "${GITHUB_ACTION_PATH}/scripts/next-version.sh" \
             "${last_tag:-v0.0.0}")
 
@@ -178,14 +183,15 @@ runs:
           exit 0
         fi
 
-        # gh creates the tag at --target, so no credentials are needed in
-        # the workspace checkout.
-        if [ -n "$(git tag --list "$tag")" ] ||
-          gh release view "$tag" >/dev/null 2>&1; then
-          echo "✅ ${tag} already exists"
+        # Deliberately checks the release, not the tag: a tag left behind
+        # by a half-finished run still needs its release.
+        if gh release view "$tag" >/dev/null 2>&1; then
+          echo "✅ ${tag} is already released"
           exit 0
         fi
 
+        # gh creates the tag at --target, so no credentials are needed in
+        # the workspace checkout.
         gh release create "$tag" --target "${GITHUB_SHA}" --generate-notes
         echo "✅ Created ${tag}"
       shell: bash
