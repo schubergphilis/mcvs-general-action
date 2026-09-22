@@ -16,7 +16,7 @@ updates:
     schedule:
       interval: weekly
     cooldown:
-      default-days: 5
+      default-days: 7
     groups:
       pip-all:
         patterns:
