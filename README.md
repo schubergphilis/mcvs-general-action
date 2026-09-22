@@ -45,6 +45,31 @@ The Mission Critical Vulnerability Scanner (MCVS) General Action provides automa
   - Uses hash-pinned dependencies for security
   - Configuration: `configs/yamllint.yaml`
 
+### Automatic Tagging and Releases
+
+On a push to the default branch, the action creates the next semver tag and a
+GitHub Release with auto-generated notes. No `testing-type` is involved: the
+step is enabled by default and only runs on that event. Set
+`tag-enabled: "false"` to turn it off.
+
+The bump is derived from the Conventional Commit messages since the latest
+`vX.Y.Z` tag:
+
+| Commit                                  | Bump   | Example           |
+| :-------------------------------------- | :----- | :---------------- |
+| `feat!:` or a `BREAKING CHANGE:` footer | major  | `0.5.1` → `1.0.0` |
+| `feat:`                                 | minor  | `0.5.1` → `0.6.0` |
+| `fix:`, `perf:`                         | patch  | `0.5.1` → `0.5.2` |
+| anything else only                      | no tag | —                 |
+
+Breaking changes bump the major even below `1.0.0`. When the version is
+already released the step is a no-op, so a rerun cannot clobber a release.
+
+Because this is on by default and is not tied to a `testing-type`, a
+repository that already calls this action on a push to its default branch —
+for `yamllint`, for instance — starts creating tags and releases after
+upgrading. Set `tag-enabled: "false"` to opt out.
+
 ## Usage
 
 ### Basic Setup
@@ -74,7 +99,7 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
-      - uses: schubergphilis/mcvs-general-action@v0.5.1
+      - uses: schubergphilis/mcvs-general-action@v0.7.0
         with:
           testing-type: ${{ matrix.args.testing-type }}
 ```
@@ -89,15 +114,49 @@ jobs:
     runs-on: ubuntu-slim
     steps:
       - uses: actions/checkout@v6
-      - uses: schubergphilis/mcvs-general-action@v0.5.1
+      - uses: schubergphilis/mcvs-general-action@v0.7.0
         with:
           testing-type: lint-commit
 ```
+
+### Tagging on Merge to Main
+
+Create a `.github/workflows/tag.yml` file with the following content:
+
+```yml
+---
+name: tag
+"on":
+  push:
+    branches:
+      - main
+concurrency:
+  cancel-in-progress: false
+  group: tag
+permissions:
+  contents: read
+jobs:
+  mcvs-general-action:
+    permissions:
+      contents: write
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - uses: schubergphilis/mcvs-general-action@v0.7.0
+```
+
+The job needs `contents: write`, and the `concurrency` group serialises two
+pushes that land in quick succession. Keep it in its own workflow rather
+than adding it to the pull request matrix, otherwise every matrix job races
+to create the same tag.
 
 ## Inputs
 
 | Input                           | Description                                       | Required | Default |
 | :------------------------------ | :------------------------------------------------ | :------- | :------ |
+| tag-enabled                     | Tag and release on a push to default branch       | No       | true    |
 | testing-type                    | Type of test to run (see Available Testing Types) | Yes      | N/A     |
 | zizmor-action-advanced-security | Disable advanced security report upload           | No       | true    |
 
@@ -107,9 +166,11 @@ jobs:
 - Python dependencies (yamllint) are installed with `--require-hashes` from
   [`configs/requirements.txt`](configs/requirements.txt)
 - NPM packages (commitlint) are installed via `npm ci` with package-lock.json for integrity verification
-- The internal checkout used by `lint-commit` and `lint-git` runs with
-  `persist-credentials: false`, so the workflow token is never written to
-  `.git/config` in the workspace
+- The internal checkout used by `lint-commit`, `lint-git` and the tagging
+  step runs with `persist-credentials: false`, so the workflow token is never
+  written to `.git/config` in the workspace
+- The tag is created by `gh release create --target`, so tagging needs no
+  pushable git remote in the workspace either
 
 ## License
 

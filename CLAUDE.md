@@ -54,6 +54,45 @@ The action implements six distinct testing modes, each triggered by the
    - Uses hash-pinned dependencies for security (see below)
    - Configuration: `configs/yamllint.yaml`
 
+### Tagging on Push to the Default Branch
+
+Two steps at the end of `action.yml` run on `push` to the default branch,
+gated by the `tag-enabled` input (default `"true"`) instead of by
+`testing-type`. They check out the full history and then compute the next
+version with `scripts/next-version.sh`, which reads NUL-separated commit
+messages on stdin and prints `vX.Y.Z` (nothing when no commit warrants a
+release). `feat!:`/`BREAKING CHANGE:` bumps the major even below `1.0.0`.
+
+Three things in this step are load-bearing and have each already caused a
+bug:
+
+- Feed the script with `git log -z --format=%B`, never `--format=%B%x00`.
+  The latter writes a newline *after* every NUL, so every record but the
+  first arrives with a leading newline, loses its subject and is silently
+  classified as no bump. The script strips that newline defensively, and
+  `scripts/next-version_test.sh` covers both framings.
+- The read loop must not `break`. Closing stdin early makes `git log` die of
+  SIGPIPE once its output passes the pipe buffer, and `shell: bash` runs
+  with `-eo pipefail`, so the step fails with 141 instead of releasing.
+- Pick the baseline tag with `git tag --merged HEAD --list "v*"
+  --sort=-v:refname` filtered through a strict regex, not with `git
+  describe --match`. `--match` is an fnmatch glob that also accepts
+  `v1.0.0-rc1`, which the script rejects, failing every push to main. Use a
+  here-string rather than piping into `grep -m1`, or grep's early exit
+  SIGPIPEs `git tag`.
+
+The release is created with `gh release create "$tag" --target
+"$GITHUB_SHA" --generate-notes`, which creates the tag as a side effect.
+Never replace this with `git push origin "$tag"`: the workspace checkout
+uses `persist-credentials: false` and has no pushable remote. The guard
+checks the *release*, not the tag, so a tag left behind by a half-finished
+run still gets one.
+
+Self-tested by `.github/workflows/tag.yml`, which needs a `concurrency`
+group so two quick pushes do not race. The bump logic has a runnable check:
+`bash scripts/next-version_test.sh`, which builds throwaway repositories so
+it exercises real `git log` output.
+
 ### Hash-Pinned Dependencies
 
 #### Yamllint (Python)
@@ -93,7 +132,9 @@ The action tests itself using `.github/workflows/general.yml`, which:
 
 - Runs on pull requests
 - Uses a matrix strategy to test all testing-types
-- Uses the action from the current checkout (`uses: ./`)
+- Uses the action from the current checkout with GitHub's self-repository
+  syntax (`uses: $/`, not `uses: ./`, which zizmor's `self-repository` audit
+  rejects because it is subject to runtime filesystem state)
 
 To test changes locally:
 
@@ -144,11 +185,14 @@ Configuration enforces this via commitlint in `configs/commitlint.config.mjs`.
 ## Configuration Files
 
 - `action.yml`: Main action definition with all testing logic
+- `scripts/next-version.sh`: Conventional-commit semver bump, with
+  `scripts/next-version_test.sh` as its self-check
 - `configs/commitlint.config.mjs`: Commit message linting rules
 - `configs/package.json` / `configs/package-lock.json`: Commitlint dependencies
 - `configs/mcvs.markdownlint.yaml`: Markdown formatting rules
 - `configs/yamllint.yaml`: YAML formatting rules
 - `.github/workflows/general.yml`: Self-testing workflow
+- `.github/workflows/tag.yml`: Self-testing workflow for tagging
 - `.github/workflows/mcvs-pr-validation.yml`: Additional PR validation
 
 ## Modifying Testing Logic

@@ -3,6 +3,10 @@ name: mcvs-general-action
 description: |
   The Mission Critical Vulnerability Scanner (MCVS) General action.
 inputs:
+  tag-enabled:
+    default: "true"
+    description: |
+      Create a tag and a release on a push to the default branch.
   testing-type:
     description: |
       The testing type, e.g. integration, unit or some other.
@@ -143,4 +147,51 @@ runs:
         python3 -m pip install --require-hashes --user \
           -r "${GITHUB_ACTION_PATH}/configs/requirements.txt"
         yamllint -c "${GITHUB_ACTION_PATH}/configs/yamllint.yaml" .
+      shell: bash
+    - if: |
+        github.event_name == 'push' &&
+        github.ref_name == github.event.repository.default_branch &&
+        inputs.tag-enabled == 'true'
+      name: check out the full history 🌳
+      # yamllint disable-line rule:line-length
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        fetch-depth: 0
+        persist-credentials: false
+    - if: |
+        github.event_name == 'push' &&
+        github.ref_name == github.event.repository.default_branch &&
+        inputs.tag-enabled == 'true'
+      name: create a tag and a release 🏷️
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        # The highest reachable vX.Y.Z tag. --match is an fnmatch glob, so
+        # it would also accept v1.0.0-rc1, which the version bump cannot
+        # parse; grep on a here-string instead, because grep -m1 in a pipe
+        # would SIGPIPE git on a repository with many tags.
+        tags=$(git tag --merged HEAD --list "v*" --sort=-v:refname)
+        last_tag=$(grep -m1 -E "^v[0-9]+\.[0-9]+\.[0-9]+$" <<<"$tags" ||
+          true)
+
+        tag=$(git log -z --format=%B "${last_tag:+${last_tag}..}HEAD" |
+          bash "${GITHUB_ACTION_PATH}/scripts/next-version.sh" \
+            "${last_tag:-v0.0.0}")
+
+        if [ -z "$tag" ]; then
+          echo "✅ Nothing to release since ${last_tag:-the first commit}"
+          exit 0
+        fi
+
+        # Deliberately checks the release, not the tag: a tag left behind
+        # by a half-finished run still needs its release.
+        if gh release view "$tag" >/dev/null 2>&1; then
+          echo "✅ ${tag} is already released"
+          exit 0
+        fi
+
+        # gh creates the tag at --target, so no credentials are needed in
+        # the workspace checkout.
+        gh release create "$tag" --target "${GITHUB_SHA}" --generate-notes
+        echo "✅ Created ${tag}"
       shell: bash
