@@ -4,6 +4,9 @@ name: tag
   push:
     branches:
       - main
+concurrency:
+  cancel-in-progress: false
+  group: tag
 permissions:
   contents: read
 jobs:
