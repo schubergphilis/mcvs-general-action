@@ -37,12 +37,6 @@ The action implements four distinct testing modes, each triggered by the
    - Uses hash-pinned dependencies for security (see below)
    - Configuration: `configs/yamllint.yaml`
 
-> **Note:** The self-testing matrix in `.github/workflows/general.yml` also
-> lists a `security-file-system` testing-type, but `action.yml` has **no
-> implementing step** for it, so that matrix job is currently a no-op. Add a
-> corresponding `if: inputs.testing-type == 'security-file-system'` block to
-> `action.yml` before relying on it (or remove it from the matrix).
-
 ### Hash-Pinned Dependencies
 
 #### Yamllint (Python)
