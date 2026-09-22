@@ -20,7 +20,7 @@ runs:
       with:
         fetch-depth: 0
         persist-credentials: false
-        ref: ${{ github.event.pull_request.head.ref }}
+        ref: ${{ github.event.pull_request.head.sha }}
         repository: ${{ github.event.pull_request.head.repo.full_name }}
     - if: |
         github.event_name == 'pull_request' &&
@@ -87,10 +87,11 @@ runs:
         inputs.testing-type == 'lint-git'
       env:
         BASE_REF: ${{ github.event.pull_request.base.ref }}
+        HEAD_REF: ${{ github.event.pull_request.head.ref }}
       run: |
         BASE="refs/mcvs/base"
 
-        current_branch=$(git rev-parse --abbrev-ref HEAD)
+        current_branch="${HEAD_REF}"
 
         commits=$(git rev-list "${BASE}..HEAD" --merges)
 
