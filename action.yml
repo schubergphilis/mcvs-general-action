@@ -47,51 +47,77 @@ runs:
     - if: |
         github.event_name == 'pull_request' &&
         inputs.testing-type == 'lint-git'
+      name: check out the base branch 🌳
+      # yamllint disable-line rule:line-length
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        fetch-depth: 0
+        path: .mcvs-base
+        persist-credentials: false
+        ref: ${{ github.event.pull_request.base.ref }}
+        repository: ${{ github.event.pull_request.base.repo.full_name }}
+    - if: |
+        github.event_name == 'pull_request' &&
+        inputs.testing-type == 'lint-git'
       run: |
-        commits_behind=$(git rev-list --count HEAD..origin/main)
+        # origin points at the head repository, which the pull request
+        # author controls, so compare against the base branch as cloned
+        # from the base repository itself.
+        git fetch --no-tags "${GITHUB_WORKSPACE}/.mcvs-base" \
+          "+HEAD:refs/mcvs/base"
+        rm -rf "${GITHUB_WORKSPACE}/.mcvs-base"
+      shell: bash
+    - if: |
+        github.event_name == 'pull_request' &&
+        inputs.testing-type == 'lint-git'
+      env:
+        BASE_REF: ${{ github.event.pull_request.base.ref }}
+      run: |
+        commits_behind=$(git rev-list --count HEAD..refs/mcvs/base)
         if (( commits_behind > 0 )); then
-          echo "❗ Branch is behind main by $commits_behind commits"
+          echo "❗ Branch is behind ${BASE_REF} by $commits_behind commits"
           exit 1
         fi
-        echo "✅ Branch is up to date with main"
+        echo "✅ Branch is up to date with ${BASE_REF}"
       shell: bash
     # yamllint disable rule:line-length
     - if: |
         github.event_name == 'pull_request' &&
         inputs.testing-type == 'lint-git'
+      env:
+        BASE_REF: ${{ github.event.pull_request.base.ref }}
       run: |
-        MAIN_BRANCH="main"
-        REMOTE="origin"
+        BASE="refs/mcvs/base"
 
         current_branch=$(git rev-parse --abbrev-ref HEAD)
 
-        commits=$(git rev-list "${REMOTE}/${MAIN_BRANCH}..HEAD" --merges)
+        commits=$(git rev-list "${BASE}..HEAD" --merges)
 
         for sha in $commits; do
           p1=$(git rev-parse "$sha^1")
           p2=$(git rev-parse "$sha^2")
 
-          if git merge-base --is-ancestor "${p1}" "${REMOTE}/${MAIN_BRANCH}" && ! git merge-base --is-ancestor "${p2}" "${REMOTE}/${MAIN_BRANCH}"; then
+          if git merge-base --is-ancestor "${p1}" "${BASE}" && ! git merge-base --is-ancestor "${p2}" "${BASE}"; then
             merged_from="${p1}"
-          elif git merge-base --is-ancestor "${p2}" "${REMOTE}/${MAIN_BRANCH}" && ! git merge-base --is-ancestor "${p1}" "${REMOTE}/${MAIN_BRANCH}"; then
+          elif git merge-base --is-ancestor "${p2}" "${BASE}" && ! git merge-base --is-ancestor "${p1}" "${BASE}"; then
             merged_from="${p2}"
           else
             continue
           fi
 
-          echo "❗ Detected a merge of ${MAIN_BRANCH} into ${current_branch} at commit ${sha}"
+          echo "❗ Detected a merge of ${BASE_REF} into ${current_branch} at commit ${sha}"
           echo "  Commit message: $(git log --format=%s -n 1 $sha)"
           exit 1
         done
 
-        echo "✅ No merges of ${MAIN_BRANCH} detected in ${current_branch}"
+        echo "✅ No merges of ${BASE_REF} detected in ${current_branch}"
         exit 0
       shell: bash
     - if: |
         github.event_name == 'pull_request' &&
         inputs.testing-type == 'lint-git'
       run: |
-        fixup_commits=$(git log --oneline --grep="^fixup!" --grep="^squash!" origin/main..HEAD)
+        fixup_commits=$(git log --oneline --grep="^fixup!" --grep="^squash!" refs/mcvs/base..HEAD)
         if [ -n "$fixup_commits" ]; then
           echo "❗ Found fixup or squash commits that should be squashed:"
           echo "$fixup_commits"

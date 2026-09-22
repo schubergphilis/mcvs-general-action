@@ -23,9 +23,15 @@ The action implements six distinct testing modes, each triggered by the
    - Configuration: `configs/commitlint.config.mjs`
 
 1. **lint-git**: Enforces Git workflow standards
-   - Checks branch is up-to-date with main (no commits behind)
-   - Detects unwanted merges of main into feature branch
+   - Checks branch is up-to-date with the base branch (no commits behind)
+   - Detects unwanted merges of the base branch into feature branch
    - Identifies fixup/squash commits that should be squashed
+
+   Note: the workspace is a clone of the *head* repository, so `origin` is
+   the fork on a fork pull request. All three checks therefore compare
+   against `refs/mcvs/base`, which a dedicated step fetches from
+   `base.repo.full_name` at `base.ref`. Never reintroduce `origin/main`
+   here.
 
 1. **lint-action**: Scans GitHub Actions workflows with
    [zizmor](https://github.com/zizmorcore/zizmor-action)
