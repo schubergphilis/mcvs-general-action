@@ -19,7 +19,7 @@ runs:
       uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         fetch-depth: 0
-        ref: ${{ github.event.pull_request.head.ref }}
+        ref: ${{ github.event.pull_request.head.sha }}
         repository: ${{ github.event.pull_request.head.repo.full_name }}
     - if: |
         github.event_name == 'pull_request' &&
@@ -59,11 +59,13 @@ runs:
     - if: |
         github.event_name == 'pull_request' &&
         inputs.testing-type == 'lint-git'
+      env:
+        HEAD_REF: ${{ github.event.pull_request.head.ref }}
       run: |
         MAIN_BRANCH="main"
         REMOTE="origin"
 
-        current_branch=$(git rev-parse --abbrev-ref HEAD)
+        current_branch="${HEAD_REF}"
 
         commits=$(git rev-list "${REMOTE}/${MAIN_BRANCH}..HEAD" --merges)
 
