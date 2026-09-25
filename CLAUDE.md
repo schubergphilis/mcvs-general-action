@@ -39,8 +39,8 @@ The action implements six distinct testing modes, each triggered by the
    - `advanced-security` is controlled by the
      `zizmor-action-advanced-security` input (default `"true"`)
 
-1. **lychee**: Checks links in Markdown, HTML and reStructuredText files with
-   [lychee](https://github.com/lycheeverse/lychee)
+1. **lint-links**: Checks links in Markdown, HTML and reStructuredText files
+   with [lychee](https://github.com/lycheeverse/lychee)
    - Runs `lycheeverse/lychee-action`, which fails the job on a broken link
    - Passes `args` to add `--include-fragments` (validates `#anchor` targets).
      Because `args` replaces the upstream default wholesale, the action

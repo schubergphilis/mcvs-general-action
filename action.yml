@@ -126,7 +126,7 @@ runs:
         fi
         echo "✅ No fixup or squash commits found"
       shell: bash
-    - if: inputs.testing-type == 'lychee'
+    - if: inputs.testing-type == 'lint-links'
       name: check links 🔗
       # yamllint disable-line rule:line-length
       uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2.9.0

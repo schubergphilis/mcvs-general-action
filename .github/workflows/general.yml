@@ -12,7 +12,7 @@ jobs:
           - testing-type: lint-action
           - testing-type: lint-commit
           - testing-type: lint-git
-          - testing-type: lychee
+          - testing-type: lint-links
           - testing-type: markdownlint
           - testing-type: yamllint
     runs-on: ubuntu-24.04
