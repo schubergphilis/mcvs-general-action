@@ -130,6 +130,12 @@ runs:
       name: check links 🔗
       # yamllint disable-line rule:line-length
       uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2.9.0
+      with:
+        # Restates the upstream default args to append --include-fragments,
+        # which validates #anchor targets. Re-sync on a lychee-action bump.
+        args: >-
+          --verbose --no-progress --include-fragments
+          './**/*.md' './**/*.html' './**/*.rst'
     - if: inputs.testing-type == 'markdownlint'
       # yamllint disable-line rule:line-length
       uses: DavidAnson/markdownlint-cli2-action@21c1be1b93ad9ed58fa840aacc3f279cde2a72ff # v24.2.0

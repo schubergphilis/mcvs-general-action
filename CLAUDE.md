@@ -41,8 +41,10 @@ The action implements six distinct testing modes, each triggered by the
 
 1. **lychee**: Checks links in Markdown, HTML and reStructuredText files with
    [lychee](https://github.com/lycheeverse/lychee)
-   - Runs `lycheeverse/lychee-action` on its defaults, which already fail the
-     job on a broken link
+   - Runs `lycheeverse/lychee-action`, which fails the job on a broken link
+   - Passes `args` to add `--include-fragments` (validates `#anchor` targets).
+     Because `args` replaces the upstream default wholesale, the action
+     restates that default; re-sync the list on a `lychee-action` bump
 
 1. **markdownlint**: Validates Markdown formatting with
    [markdownlint](https://github.com/DavidAnson/markdownlint)

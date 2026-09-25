@@ -34,6 +34,8 @@ The Mission Critical Vulnerability Scanner (MCVS) General Action provides automa
 - **`lychee`**: Checks that links in Markdown, HTML and reStructuredText
   files resolve
   - Uses [lychee](https://github.com/lycheeverse/lychee)
+  - Also validates `#anchor` fragments in link targets, so a link left behind
+    by a renamed heading is caught
   - Fails the job on a broken link and writes a summary to the job page
 
 - **`markdownlint`**: Validates Markdown formatting
@@ -96,10 +98,13 @@ jobs:
 
 ## Inputs
 
-| Input                           | Description                                       | Required | Default |
-| :------------------------------ | :------------------------------------------------ | :------- | :------ |
-| testing-type                    | Type of test to run (see Available Testing Types) | Yes      | N/A     |
-| zizmor-action-advanced-security | Disable advanced security report upload           | No       | true    |
+The `testing-type` values are listed under
+[Available Testing Types](#available-testing-types).
+
+| Input                           | Description                             | Required | Default |
+| :------------------------------ | :-------------------------------------- | :------- | :------ |
+| testing-type                    | Type of test to run                     | Yes      | N/A     |
+| zizmor-action-advanced-security | Disable advanced security report upload | No       | true    |
 
 ## Security Considerations
 
