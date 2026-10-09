@@ -5,133 +5,50 @@
 
 <img src="./assets/logos/mcvs-general-action.png" alt="MCVS General Action logo" width="250">
 
-## Overview
-
 The Mission Critical Vulnerability Scanner (MCVS) General Action provides automated security and quality checks for your GitHub repository. This composite action runs multiple validation tests to ensure code quality, security standards, and proper Git workflow practices.
 
-## Features
+## Quickstart
 
-### Available Testing Types
+1. Pick the checks you need from the [testing types](docs/testing-types.md);
+   the workflow below runs all of them.
+1. Keep `security-events: write` if you run `lint-action` with the default
+   Advanced Security upload, see [Inputs](docs/inputs.md).
+1. Create `.github/workflows/general.yml` with the following content:
 
-- **`lint-action`**: Validates GitHub Actions workflow files for security issues
-  - Uses [zizmor](https://github.com/zizmorcore/zizmor) to detect security vulnerabilities
-  - Checks at minimum `low` severity level
+   ```yml
+   ---
+   name: general
+   "on": pull_request
+   permissions:
+     contents: read
+   jobs:
+     mcvs-general-action:
+       permissions:
+         contents: read
+         # Only needed by lint-action to upload results to Advanced Security.
+         security-events: write
+       strategy:
+         matrix:
+           args:
+             - testing-type: lint-action
+             - testing-type: lint-commit
+             - testing-type: lint-git
+             - testing-type: lint-links
+             - testing-type: markdownlint
+             - testing-type: yamllint
+       runs-on: ubuntu-24.04
+       steps:
+         - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+           with:
+             persist-credentials: false
+         - uses: schubergphilis/mcvs-general-action@9705f65655a1848a02c368b91d14185b065ebdb5 # v0.7.3
+           with:
+             testing-type: ${{ matrix.args.testing-type }}
+   ```
 
-- **`lint-commit`**: Validates commit messages follow [Conventional Commits](https://www.conventionalcommits.org/) format
-  - Checks all commits in the pull request, compared against the base branch
-    as fetched from the base repository, so it also works on a fork that is
-    not synced with the base
-  - Enforces conventional commit standards (feat, fix, docs, etc.)
-  - Configuration: `configs/commitlint.config.mjs`
+## Documentation
 
-- **`lint-git`**: Enforces Git workflow best practices
-  - Ensures the feature branch is up-to-date with the pull request base
-    branch (no commits behind)
-  - Detects and blocks unwanted merges of the base branch into feature
-    branches
-  - Compares against the base branch as fetched from the base repository, so
-    the checks cannot be bypassed from a fork
-  - Identifies `fixup!`, `squash!` and `amend!` commits that should be
-    squashed before merge
-
-- **`lint-links`**: Checks that links in Markdown, HTML and reStructuredText
-  files resolve
-  - Uses [lychee](https://github.com/lycheeverse/lychee)
-  - Also validates `#anchor` fragments in link targets, so a link left behind
-    by a renamed heading is caught
-  - Fails the job on a broken link and writes a summary to the job page
-
-- **`markdownlint`**: Validates Markdown formatting
-  - Uses [markdownlint](https://github.com/DavidAnson/markdownlint)
-  - Configuration: `configs/mcvs.markdownlint.yaml`
-
-- **`yamllint`**: Validates YAML file formatting
-  - Checks all YAML files against formatting standards
-  - Uses hash-pinned dependencies for security
-  - Configuration: `configs/yamllint.yaml`
-
-## Usage
-
-### Basic Setup
-
-Create a `.github/workflows/general.yml` file with the following content:
-
-```yml
----
-name: general
-"on": pull_request
-permissions:
-  contents: read
-jobs:
-  mcvs-general-action:
-    permissions:
-      contents: read
-      # Only needed by lint-action to upload results to Advanced Security.
-      security-events: write
-    strategy:
-      matrix:
-        args:
-          - testing-type: lint-action
-          - testing-type: lint-commit
-          - testing-type: lint-git
-          - testing-type: lint-links
-          - testing-type: markdownlint
-          - testing-type: yamllint
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: schubergphilis/mcvs-general-action@9705f65655a1848a02c368b91d14185b065ebdb5 # v0.7.3
-        with:
-          testing-type: ${{ matrix.args.testing-type }}
-```
-
-### Running Individual Tests
-
-You can run a single test type instead of using a matrix:
-
-```yml
-jobs:
-  commit-lint:
-    runs-on: ubuntu-slim
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: schubergphilis/mcvs-general-action@9705f65655a1848a02c368b91d14185b065ebdb5 # v0.7.3
-        with:
-          testing-type: lint-commit
-```
-
-## Inputs
-
-The `testing-type` values are listed under
-[Available Testing Types](#available-testing-types). The action fails on a
-missing or unknown value rather than silently skipping every check.
-
-| Input                           | Description                                       | Required | Default |
-| :------------------------------ | :------------------------------------------------ | :------- | :------ |
-| testing-type                    | Type of test to run                               | Yes      | N/A     |
-| zizmor-action-advanced-security | Upload `lint-action` results to Advanced Security | No       | true    |
-
-With `zizmor-action-advanced-security` set to `true`, zizmor writes SARIF that
-is uploaded to code scanning, which needs the `security-events: write`
-permission. In that mode `lint-action` does **not** fail the job on findings;
-it only blocks a pull request through a code scanning ruleset, see
-[Set code scanning merge protection](https://docs.github.com/en/code-security/how-tos/find-and-fix-code-vulnerabilities/manage-your-configuration/set-code-scanning-merge-protection).
-Set it to `false` to have `lint-action` fail the job on findings instead.
-
-## Security Considerations
-
-- All GitHub Actions are pinned to commit SHAs for security
-- Python dependencies (yamllint) are installed with `--require-hashes` from
-  [`configs/requirements.txt`](configs/requirements.txt)
-- NPM packages (commitlint) are installed via `npm ci` with package-lock.json for integrity verification
-- The internal checkout used by `lint-commit` and `lint-git` runs with
-  `persist-credentials: false`, so the workflow token is never written to
-  `.git/config` in the workspace
-
-## License
-
-See [LICENSE](LICENSE) file for details.
+- [Testing types](docs/testing-types.md)
+- [Usage](docs/usage.md)
+- [Inputs](docs/inputs.md)
+- [Security considerations](docs/security.md)

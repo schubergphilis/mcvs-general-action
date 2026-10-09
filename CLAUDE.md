@@ -6,6 +6,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 MCVS-general-action is a composite GitHub Action that provides multiple security and quality testing capabilities for repositories. It operates as a single action with different testing modes, selected via the `testing-type` input parameter.
 
+User documentation is a lean `README.md` (intro and `## Quickstart`) plus pages
+in `docs/` (testing types, usage, inputs, security), each linked from the
+README's `## Documentation` section. Update those pages when behaviour changes,
+and keep relative links and `#anchor` fragments valid, as lint-links checks
+them.
+
 ## Architecture
 
 ### Composite Action Design
