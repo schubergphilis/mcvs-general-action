@@ -98,7 +98,8 @@ runs:
       run: |
         commits_behind=$(git rev-list --count HEAD..refs/mcvs/base)
         if (( commits_behind > 0 )); then
-          echo "❗ Branch is behind ${BASE_REF} by $commits_behind commits"
+          echo "::error::Branch is behind ${BASE_REF} by" \
+            "${commits_behind} commits" >&2
           exit 1
         fi
         echo "✅ Branch is up to date with ${BASE_REF}"
