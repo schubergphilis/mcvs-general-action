@@ -62,9 +62,12 @@ name: general
 "on": pull_request
 permissions:
   contents: read
-  packages: read
 jobs:
   mcvs-general-action:
+    permissions:
+      contents: read
+      # Only needed by lint-action to upload results to Advanced Security.
+      security-events: write
     strategy:
       matrix:
         args:
