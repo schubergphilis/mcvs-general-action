@@ -76,10 +76,10 @@ jobs:
           - testing-type: yamllint
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: schubergphilis/mcvs-general-action@v0.5.1
+      - uses: schubergphilis/mcvs-general-action@9705f65655a1848a02c368b91d14185b065ebdb5 # v0.7.3
         with:
           testing-type: ${{ matrix.args.testing-type }}
 ```
@@ -93,8 +93,10 @@ jobs:
   commit-lint:
     runs-on: ubuntu-slim
     steps:
-      - uses: actions/checkout@v6
-      - uses: schubergphilis/mcvs-general-action@v0.5.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: schubergphilis/mcvs-general-action@9705f65655a1848a02c368b91d14185b065ebdb5 # v0.7.3
         with:
           testing-type: lint-commit
 ```
