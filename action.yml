@@ -5,13 +5,32 @@ description: |
 inputs:
   testing-type:
     description: |
-      The testing type, e.g. integration, unit or some other.
+      The testing type: lint-action, lint-commit, lint-git, lint-links,
+      markdownlint or yamllint.
+    required: true
   zizmor-action-advanced-security:
     default: "true"
     description: Upload results to Advanced Security or not.
 runs:
   using: composite
   steps:
+    # GitHub does not enforce required inputs of a composite action, and an
+    # unknown testing-type would otherwise skip every step and pass.
+    - name: validate the testing type 🔎
+      env:
+        TESTING_TYPE: ${{ inputs.testing-type }}
+      run: |
+        types="lint-action lint-commit lint-git lint-links"
+        types+=" markdownlint yamllint"
+        for type in ${types}; do
+          if [[ "${TESTING_TYPE}" == "${type}" ]]; then
+            exit 0
+          fi
+        done
+        echo "::error::Unknown testing-type '${TESTING_TYPE}'," \
+          "use one of: ${types}" >&2
+        exit 1
+      shell: bash
     - if: |
         github.event_name == 'pull_request' &&
         (inputs.testing-type == 'lint-commit' ||

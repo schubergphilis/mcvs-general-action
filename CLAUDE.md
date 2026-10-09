@@ -15,7 +15,10 @@ The action is defined in `action.yml` as a composite action (not a Docker or Jav
 ### Testing Types
 
 The action implements six distinct testing modes, each triggered by the
-`testing-type` input:
+`testing-type` input. The first step fails on a missing or unknown value,
+because GitHub does not enforce `required` on composite action inputs and an
+unknown value would otherwise skip every step and pass. Keep its list in sync
+when adding or renaming a testing type.
 
 1. **lint-commit**: Validates commit messages using commitlint
    - Uses `@commitlint/config-conventional` for conventional commits format

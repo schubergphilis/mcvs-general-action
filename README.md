@@ -99,7 +99,8 @@ jobs:
 ## Inputs
 
 The `testing-type` values are listed under
-[Available Testing Types](#available-testing-types).
+[Available Testing Types](#available-testing-types). The action fails on a
+missing or unknown value rather than silently skipping every check.
 
 | Input                           | Description                             | Required | Default |
 | :------------------------------ | :-------------------------------------- | :------- | :------ |
