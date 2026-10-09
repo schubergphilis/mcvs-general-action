@@ -96,54 +96,30 @@ runs:
     - if: |
         github.event_name == 'pull_request' &&
         inputs.testing-type == 'lint-git'
+      name: check the branch is up to date with the base 🔄
       env:
         BASE_REF: ${{ github.event.pull_request.base.ref }}
       run: |
-        commits_behind=$(git rev-list --count HEAD..refs/mcvs/base)
-        if (( commits_behind > 0 )); then
-          echo "::error::Branch is behind ${BASE_REF} by" \
-            "${commits_behind} commits" >&2
-          exit 1
-        fi
-        echo "✅ Branch is up to date with ${BASE_REF}"
+        "${GITHUB_ACTION_PATH}/scripts/lint-git.sh" behind refs/mcvs/base
       shell: bash
     - if: |
         github.event_name == 'pull_request' &&
         inputs.testing-type == 'lint-git'
+      name: check for merges of the base branch 🔀
       env:
         BASE_REF: ${{ github.event.pull_request.base.ref }}
         HEAD_REF: ${{ github.event.pull_request.head.ref }}
       run: |
-        BASE="refs/mcvs/base"
-
-        # Merging the base branch into the feature branch yields a merge
-        # whose first parent is the feature branch and whose second parent
-        # is on the base branch. A merge of another topic, whose second
-        # parent is not on the base branch, is fine.
-        while read -r sha; do
-          if git merge-base --is-ancestor "${sha}^2" "${BASE}" &&
-            ! git merge-base --is-ancestor "${sha}^1" "${BASE}"; then
-            echo "::error::Detected a merge of ${BASE_REF} into ${HEAD_REF}" \
-              "at commit ${sha}: $(git log --format=%s -n 1 "${sha}")" >&2
-            exit 1
-          fi
-        done < <(git rev-list --merges "${BASE}..HEAD")
-
-        echo "✅ No merges of ${BASE_REF} detected in ${HEAD_REF}"
+        "${GITHUB_ACTION_PATH}/scripts/lint-git.sh" merges refs/mcvs/base
       shell: bash
     - if: |
         github.event_name == 'pull_request' &&
         inputs.testing-type == 'lint-git'
+      name: check for fixup, squash and amend commits 🧹
+      env:
+        BASE_REF: ${{ github.event.pull_request.base.ref }}
       run: |
-        fixup_commits=$(git log --oneline --grep="^fixup!" --grep="^squash!" \
-          --grep="^amend!" refs/mcvs/base..HEAD)
-        if [ -n "$fixup_commits" ]; then
-          echo "::error::Found fixup, squash or amend commits that should be" \
-            "squashed" >&2
-          echo "$fixup_commits"
-          exit 1
-        fi
-        echo "✅ No fixup, squash or amend commits found"
+        "${GITHUB_ACTION_PATH}/scripts/lint-git.sh" fixups refs/mcvs/base
       shell: bash
     - if: inputs.testing-type == 'lint-links'
       name: check links 🔗

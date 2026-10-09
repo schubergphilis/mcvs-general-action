@@ -10,7 +10,7 @@ MCVS-general-action is a composite GitHub Action that provides multiple security
 
 ### Composite Action Design
 
-The action is defined in `action.yml` as a composite action (not a Docker or JavaScript action). All logic is implemented as bash scripts that run directly in the GitHub Actions runner environment.
+The action is defined in `action.yml` as a composite action (not a Docker or JavaScript action). All logic is implemented as bash that runs directly in the GitHub Actions runner environment: inline `run` blocks in `action.yml`, except the lint-git checks, which live in `scripts/lint-git.sh` so that `tests/lint-git.sh` can test them.
 
 ### Testing Types
 
@@ -30,6 +30,8 @@ when adding or renaming a testing type.
    - Checks branch is up-to-date with the base branch (no commits behind)
    - Detects unwanted merges of the base branch into feature branch
    - Identifies fixup/squash/amend commits that should be squashed
+   - Implemented in `scripts/lint-git.sh` (one subcommand per check:
+     `behind`, `merges`, `fixups`), covered by `tests/lint-git.sh`
 
    Note: the workspace is a clone of the *head* repository, checked out at
    the immutable `head.sha`, so `HEAD` is the pull request head and `origin`
@@ -105,6 +107,13 @@ The action tests itself using `.github/workflows/general.yml`, which:
 - Runs on pull requests
 - Uses a matrix strategy to test all testing-types
 - Uses the action from the current checkout (`uses: ./`)
+- Runs `tests/lint-git.sh` in the `lint-git-test` job
+
+The lint-git self-test only proves the checks pass on a clean branch, so
+`tests/lint-git.sh` builds fixture repositories (base-into-feature merge,
+topic merges, fixup!/squash!/amend! commits, a branch behind its base, a clean
+branch) and asserts the exit code of each check. Run it locally with
+`tests/lint-git.sh`, and extend it when changing `scripts/lint-git.sh`.
 
 To test changes locally:
 
@@ -115,7 +124,7 @@ To test changes locally:
 
 ### Manual Testing
 
-You cannot easily run this action locally since it's a GitHub Actions composite action. Test by:
+Apart from `tests/lint-git.sh`, you cannot easily run this action locally since it's a GitHub Actions composite action. Test by:
 
 1. Creating a PR in this repository
 1. Observing the workflow results in `.github/workflows/general.yml`
@@ -154,7 +163,9 @@ Configuration enforces this via commitlint in `configs/commitlint.config.mjs`.
 
 ## Configuration Files
 
-- `action.yml`: Main action definition with all testing logic
+- `action.yml`: Main action definition with the testing logic
+- `scripts/lint-git.sh`: The lint-git checks, run by `action.yml`
+- `tests/lint-git.sh`: Fixture-repository tests of `scripts/lint-git.sh`
 - `configs/commitlint.config.mjs`: Commit message linting rules
 - `configs/package.json` / `configs/package-lock.json`: Commitlint dependencies
 - `configs/mcvs.markdownlint.yaml`: Markdown formatting rules
