@@ -22,7 +22,8 @@ when adding or renaming a testing type.
 
 1. **lint-commit**: Validates commit messages using commitlint
    - Uses `@commitlint/config-conventional` for conventional commits format
-   - Checks all commits in the PR range (base.sha to head.sha)
+   - Checks all commits in the PR range, `refs/mcvs/base..HEAD` (see the
+     note under lint-git)
    - Configuration: `configs/commitlint.config.mjs`
 
 1. **lint-git**: Enforces Git workflow standards
@@ -30,11 +31,13 @@ when adding or renaming a testing type.
    - Detects unwanted merges of the base branch into feature branch
    - Identifies fixup/squash commits that should be squashed
 
-   Note: the workspace is a clone of the *head* repository, so `origin` is
-   the fork on a fork pull request. All three checks therefore compare
-   against `refs/mcvs/base`, which a dedicated step fetches from
-   `base.repo.full_name` at `base.ref`. Never reintroduce `origin/main`
-   here.
+   Note: the workspace is a clone of the *head* repository, checked out at
+   the immutable `head.sha`, so `HEAD` is the pull request head and `origin`
+   is the fork on a fork pull request, where `base.sha` may be absent. The
+   lint-git checks and lint-commit therefore compare against
+   `refs/mcvs/base`, which a dedicated step fetches from
+   `base.repo.full_name` at `base.ref`. Never reintroduce `origin/main`,
+   `base.sha` or `head.sha` here.
 
 1. **lint-action**: Scans GitHub Actions workflows with
    [zizmor](https://github.com/zizmorcore/zizmor-action)

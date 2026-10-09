@@ -52,21 +52,8 @@ runs:
         min-severity: low
     - if: |
         github.event_name == 'pull_request' &&
-        inputs.testing-type == 'lint-commit'
-      run: |
-        CONFIGS_PATH="${GITHUB_ACTION_PATH}/configs"
-
-        npm ci --prefix "${CONFIGS_PATH}"
-
-        npx --prefix "${CONFIGS_PATH}" commitlint \
-          --config "$CONFIGS_PATH/commitlint.config.mjs" \
-          --from ${{ github.event.pull_request.base.sha }} \
-          --to ${{ github.event.pull_request.head.sha }} \
-          --verbose
-      shell: bash
-    - if: |
-        github.event_name == 'pull_request' &&
-        inputs.testing-type == 'lint-git'
+        (inputs.testing-type == 'lint-commit' ||
+          inputs.testing-type == 'lint-git')
       name: check out the base branch 🌳
       # yamllint disable-line rule:line-length
       uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -78,7 +65,8 @@ runs:
         repository: ${{ github.event.pull_request.base.repo.full_name }}
     - if: |
         github.event_name == 'pull_request' &&
-        inputs.testing-type == 'lint-git'
+        (inputs.testing-type == 'lint-commit' ||
+          inputs.testing-type == 'lint-git')
       run: |
         # origin points at the head repository, which the pull request
         # author controls, so compare against the base branch as cloned
@@ -86,6 +74,21 @@ runs:
         git fetch --no-tags "${GITHUB_WORKSPACE}/.mcvs-base" \
           "+HEAD:refs/mcvs/base"
         rm -rf "${GITHUB_WORKSPACE}/.mcvs-base"
+      shell: bash
+    - if: |
+        github.event_name == 'pull_request' &&
+        inputs.testing-type == 'lint-commit'
+      run: |
+        CONFIGS_PATH="${GITHUB_ACTION_PATH}/configs"
+
+        npm ci --prefix "${CONFIGS_PATH}"
+
+        # HEAD is the pull request head sha checked out above.
+        npx --prefix "${CONFIGS_PATH}" commitlint \
+          --config "$CONFIGS_PATH/commitlint.config.mjs" \
+          --from refs/mcvs/base \
+          --to HEAD \
+          --verbose
       shell: bash
     - if: |
         github.event_name == 'pull_request' &&

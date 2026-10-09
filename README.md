@@ -18,7 +18,9 @@ The Mission Critical Vulnerability Scanner (MCVS) General Action provides automa
   - Checks at minimum `low` severity level
 
 - **`lint-commit`**: Validates commit messages follow [Conventional Commits](https://www.conventionalcommits.org/) format
-  - Checks all commits in pull request range
+  - Checks all commits in the pull request, compared against the base branch
+    as fetched from the base repository, so it also works on a fork that is
+    not synced with the base
   - Enforces conventional commit standards (feat, fix, docs, etc.)
   - Configuration: `configs/commitlint.config.mjs`
 
