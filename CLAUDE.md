@@ -105,7 +105,9 @@ The release is created with `gh release create "$tag" --target
 Never replace this with `git push origin "$tag"`: the workspace checkout
 uses `persist-credentials: false` and has no pushable remote. The guard
 checks the *release*, not the tag, so a tag left behind by a half-finished
-run still gets one.
+run still gets one. When `gh release create` fails, the step looks for the
+release once more before failing, so matrix jobs that race to release the
+same tag do not go red.
 
 Self-tested by `.github/workflows/tag.yml`, which needs a `concurrency`
 group so two quick pushes do not race. The bump logic is unit tested with

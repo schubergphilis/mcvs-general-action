@@ -192,7 +192,17 @@ runs:
         fi
 
         # gh creates the tag at --target, so no credentials are needed in
-        # the workspace checkout.
-        gh release create "$tag" --target "${GITHUB_SHA}" --generate-notes
+        # the workspace checkout. A caller that runs the action as a matrix
+        # on push has every job race past the check above; the losers find
+        # the release on a second look instead of failing.
+        if ! gh release create "$tag" --target "${GITHUB_SHA}" \
+          --generate-notes; then
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "✅ ${tag} was released by a concurrent job"
+            exit 0
+          fi
+          echo "❗ Could not create ${tag}; the job needs contents: write" >&2
+          exit 1
+        fi
         echo "✅ Created ${tag}"
       shell: bash
