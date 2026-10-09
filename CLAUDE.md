@@ -89,7 +89,7 @@ bug:
   The latter writes a newline *after* every NUL, so every record but the
   first arrives with a leading newline, loses its subject and is silently
   classified as no bump. The script strips that newline defensively, and
-  `scripts/next-version_test.sh` covers both framings.
+  `test/next-version.bats` covers both framings.
 - The read loop must not `break`. Closing stdin early makes `git log` die of
   SIGPIPE once its output passes the pipe buffer, and `shell: bash` runs
   with `-eo pipefail`, so the step fails with 141 instead of releasing.
@@ -108,9 +108,11 @@ checks the *release*, not the tag, so a tag left behind by a half-finished
 run still gets one.
 
 Self-tested by `.github/workflows/tag.yml`, which needs a `concurrency`
-group so two quick pushes do not race. The bump logic has a runnable check:
-`bash scripts/next-version_test.sh`, which builds throwaway repositories so
-it exercises real `git log` output.
+group so two quick pushes do not race. The bump logic is unit tested with
+BATS in `test/next-version.bats` (run `bats test/`; the `bats` job in
+`general.yml` runs it on every pull request). The tests build throwaway
+repositories so they exercise real `git log` output, and `source` the script,
+so keep its logic in functions behind the `main` source guard.
 
 ### Hash-Pinned Dependencies
 
@@ -213,8 +215,8 @@ Configuration enforces this via commitlint in `configs/commitlint.config.mjs`.
 - `action.yml`: Main action definition with the testing logic
 - `scripts/lint-git.sh`: The lint-git checks, run by `action.yml`
 - `tests/lint-git.sh`: Fixture-repository tests of `scripts/lint-git.sh`
-- `scripts/next-version.sh`: Conventional-commit semver bump, with
-  `scripts/next-version_test.sh` as its self-check
+- `scripts/next-version.sh`: Conventional-commit semver bump, unit tested
+  by `test/next-version.bats`
 - `configs/commitlint.config.mjs`: Commit message linting rules
 - `configs/package.json` / `configs/package-lock.json`: Commitlint dependencies
 - `configs/mcvs.markdownlint.yaml`: Markdown formatting rules

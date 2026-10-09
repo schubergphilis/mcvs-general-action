@@ -35,3 +35,19 @@ jobs:
         with:
           persist-credentials: false
       - run: tests/lint-git.sh
+  bats:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # yamllint disable-line rule:line-length
+      - uses: bats-core/bats-action@77d6fb60505b4d0d1d73e48bd035b55074bbfb43 # 4.0.0
+        with:
+          assert-install: false
+          bats-version: 1.14.0
+          detik-install: false
+          file-install: false
+          support-install: false
+      - run: bats test/
