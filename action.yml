@@ -113,29 +113,20 @@ runs:
       run: |
         BASE="refs/mcvs/base"
 
-        current_branch="${HEAD_REF}"
-
-        commits=$(git rev-list "${BASE}..HEAD" --merges)
-
-        for sha in $commits; do
-          p1=$(git rev-parse "$sha^1")
-          p2=$(git rev-parse "$sha^2")
-
-          if git merge-base --is-ancestor "${p1}" "${BASE}" && ! git merge-base --is-ancestor "${p2}" "${BASE}"; then
-            merged_from="${p1}"
-          elif git merge-base --is-ancestor "${p2}" "${BASE}" && ! git merge-base --is-ancestor "${p1}" "${BASE}"; then
-            merged_from="${p2}"
-          else
-            continue
+        # Merging the base branch into the feature branch yields a merge
+        # whose first parent is the feature branch and whose second parent
+        # is on the base branch. A merge of another topic, whose second
+        # parent is not on the base branch, is fine.
+        while read -r sha; do
+          if git merge-base --is-ancestor "${sha}^2" "${BASE}" &&
+            ! git merge-base --is-ancestor "${sha}^1" "${BASE}"; then
+            echo "::error::Detected a merge of ${BASE_REF} into ${HEAD_REF}" \
+              "at commit ${sha}: $(git log --format=%s -n 1 "${sha}")" >&2
+            exit 1
           fi
+        done < <(git rev-list --merges "${BASE}..HEAD")
 
-          echo "❗ Detected a merge of ${BASE_REF} into ${current_branch} at commit ${sha}"
-          echo "  Commit message: $(git log --format=%s -n 1 $sha)"
-          exit 1
-        done
-
-        echo "✅ No merges of ${BASE_REF} detected in ${current_branch}"
-        exit 0
+        echo "✅ No merges of ${BASE_REF} detected in ${HEAD_REF}"
       shell: bash
     - if: |
         github.event_name == 'pull_request' &&
