@@ -43,7 +43,10 @@ when adding or renaming a testing type.
    [zizmor](https://github.com/zizmorcore/zizmor-action)
    - Runs `zizmorcore/zizmor-action` with `min-severity: low`
    - `advanced-security` is controlled by the
-     `zizmor-action-advanced-security` input (default `"true"`)
+     `zizmor-action-advanced-security` input (default `"true"`). With
+     `"true"` zizmor uploads SARIF and does not fail the job on findings, so
+     the check only blocks through a code scanning ruleset; `"false"` fails
+     the job on findings
 
 1. **lint-links**: Checks links in Markdown, HTML and reStructuredText files
    with [lychee](https://github.com/lycheeverse/lychee)

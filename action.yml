@@ -10,7 +10,10 @@ inputs:
     required: true
   zizmor-action-advanced-security:
     default: "true"
-    description: Upload results to Advanced Security or not.
+    description: |
+      Upload lint-action results to Advanced Security or not. When "true",
+      findings do not fail the job; block on them with a code scanning
+      ruleset, or set "false" to fail the job on findings.
 runs:
   using: composite
   steps:
