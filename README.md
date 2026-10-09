@@ -31,7 +31,8 @@ The Mission Critical Vulnerability Scanner (MCVS) General Action provides automa
     branches
   - Compares against the base branch as fetched from the base repository, so
     the checks cannot be bypassed from a fork
-  - Identifies fixup/squash commits that should be squashed before merge
+  - Identifies `fixup!`, `squash!` and `amend!` commits that should be
+    squashed before merge
 
 - **`lint-links`**: Checks that links in Markdown, HTML and reStructuredText
   files resolve

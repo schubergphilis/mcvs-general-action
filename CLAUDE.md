@@ -29,7 +29,7 @@ when adding or renaming a testing type.
 1. **lint-git**: Enforces Git workflow standards
    - Checks branch is up-to-date with the base branch (no commits behind)
    - Detects unwanted merges of the base branch into feature branch
-   - Identifies fixup/squash commits that should be squashed
+   - Identifies fixup/squash/amend commits that should be squashed
 
    Note: the workspace is a clone of the *head* repository, checked out at
    the immutable `head.sha`, so `HEAD` is the pull request head and `origin`

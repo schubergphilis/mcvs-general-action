@@ -103,7 +103,6 @@ runs:
         fi
         echo "✅ Branch is up to date with ${BASE_REF}"
       shell: bash
-    # yamllint disable rule:line-length
     - if: |
         github.event_name == 'pull_request' &&
         inputs.testing-type == 'lint-git'
@@ -132,13 +131,15 @@ runs:
         github.event_name == 'pull_request' &&
         inputs.testing-type == 'lint-git'
       run: |
-        fixup_commits=$(git log --oneline --grep="^fixup!" --grep="^squash!" refs/mcvs/base..HEAD)
+        fixup_commits=$(git log --oneline --grep="^fixup!" --grep="^squash!" \
+          --grep="^amend!" refs/mcvs/base..HEAD)
         if [ -n "$fixup_commits" ]; then
-          echo "❗ Found fixup or squash commits that should be squashed:"
+          echo "::error::Found fixup, squash or amend commits that should be" \
+            "squashed" >&2
           echo "$fixup_commits"
           exit 1
         fi
-        echo "✅ No fixup or squash commits found"
+        echo "✅ No fixup, squash or amend commits found"
       shell: bash
     - if: inputs.testing-type == 'lint-links'
       name: check links 🔗
