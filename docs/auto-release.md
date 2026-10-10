@@ -68,7 +68,7 @@ This repository releases itself the same way, see
 The tag and the release are created with the workflow's `GITHUB_TOKEN`, and
 GitHub starts no workflow for events caused by that token. A workflow that
 builds release assets on a tag push, such as
-[mcvs-golang-action's releases](https://github.com/schubergphilis/mcvs-golang-action/blob/main/docs/releases.md),
+[mcvs-golang-action's releases](https://raw.githubusercontent.com/schubergphilis/mcvs-golang-action/refs/heads/main/docs/releases.md),
 therefore does not run for an auto-released tag. `GITHUB_TOKEN` may still
 dispatch a workflow, so no personal access token is needed:
 
