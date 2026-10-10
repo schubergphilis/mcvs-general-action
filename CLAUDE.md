@@ -102,6 +102,12 @@ version with `scripts/next-version.sh`, which reads NUL-separated commit
 messages on stdin and prints `vX.Y.Z` (nothing when no commit warrants a
 release). `feat!:`/`BREAKING CHANGE:` bumps the major even below `1.0.0`.
 
+The release step (`id: release`) writes the tag it created to the action's
+`tag` output, and nothing when it released nothing or found the release
+already there, so a caller can dispatch its asset-building workflow on the
+new tag (`docs/auto-release.md`): the tag, created with `GITHUB_TOKEN`,
+starts no workflow by itself.
+
 Three things in this step are load-bearing and have each already caused a
 bug:
 
