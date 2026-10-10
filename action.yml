@@ -32,6 +32,12 @@ inputs:
       Upload lint-action results to Advanced Security or not. When "true",
       findings do not fail the job; block on them with a code scanning
       ruleset, or set "false" to fail the job on findings.
+outputs:
+  tag:
+    description: |
+      The tag that auto-release created in this run, e.g. v1.2.3. Empty when
+      nothing was released, or when the release already existed.
+    value: ${{ steps.release.outputs.tag }}
 runs:
   using: composite
   steps:
@@ -192,6 +198,7 @@ runs:
         github.ref_name == github.event.repository.default_branch &&
         inputs.auto-release == 'true'
       name: create a tag and a release 🏷️
+      id: release
       env:
         GH_TOKEN: ${{ github.token }}
       run: |
@@ -231,4 +238,5 @@ runs:
           exit 1
         fi
         echo "✅ Created ${tag}"
+        echo "tag=${tag}" >>"${GITHUB_OUTPUT}"
       shell: bash

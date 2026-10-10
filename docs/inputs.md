@@ -20,3 +20,9 @@ In that mode `lint-action` does **not** fail the job on findings; it only
 blocks a pull request through a code scanning ruleset, see
 [Set code scanning merge protection](https://docs.github.com/en/code-security/how-tos/find-and-fix-code-vulnerabilities/manage-your-configuration/set-code-scanning-merge-protection).
 Set it to `false` to have `lint-action` fail the job on findings instead.
+
+## Outputs
+
+| Output | Description                                                                                                                                                             |
+| :----- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| tag    | The tag that `auto-release` created in this run, e.g. `v1.2.3`; empty when nothing was released, see [Building release assets](auto-release.md#building-release-assets) |
