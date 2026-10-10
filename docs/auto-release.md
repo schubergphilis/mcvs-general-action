@@ -74,9 +74,10 @@ dispatch a workflow, so no personal access token is needed:
 
 1. Add `workflow_dispatch` to the triggers of the workflow that builds the
    assets.
-1. Give the release step an `id`, grant the job `actions: write` and dispatch
-   that workflow on the new tag, which the `tag` output holds. It is empty
-   when nothing was released, so the dispatch only runs for a new release.
+1. Give the `mcvs-general-action` step an `id`, grant the job
+   `actions: write` and dispatch that workflow on the new tag, which the
+   `tag` output holds. It is empty when nothing was released, so the
+   dispatch only runs for a new release.
 
 ```yml
 jobs:
@@ -91,7 +92,7 @@ jobs:
         with:
           persist-credentials: false
       - id: release
-        uses: schubergphilis/mcvs-general-action@4df2739030e57a41331bcf32d413a3c745561979 # v0.9.0
+        uses: schubergphilis/mcvs-general-action@<sha> # v0.10.0
         with:
           auto-release: "true"
       - if: steps.release.outputs.tag != ''
@@ -101,5 +102,6 @@ jobs:
         run: gh workflow run golang-releases.yml --ref "${TAG}"
 ```
 
-The dispatched run has the tag as its ref, so `github.ref_name` is the new
-version, as on a tag push.
+The `tag` output is available from v0.10.0; with an older release it is
+always empty and the dispatch never runs. The dispatched run has the tag as
+its ref, so `github.ref_name` is the new version, as on a tag push.
