@@ -4,6 +4,8 @@ Set one of these values as the `testing-type` input, see
 [Inputs](inputs.md).
 
 - **`graphql-lint`**: Lints GraphQL schemas (`.graphql`, `.graphqls`)
+  - Available from mcvs-general-action `v0.9.0`; earlier releases reject it as
+    an unknown testing-type
   - Uses [graphql-linter](https://github.com/schubergphilis/graphql-linter):
     the `graphql-schema-linter` rules plus Apollo Federation validation
   - Downloads a pinned release binary and verifies its SHA-256 before running
@@ -17,7 +19,7 @@ Set one of these values as the `testing-type` input, see
     schemas
 
   ```yml
-  - uses: schubergphilis/mcvs-general-action@b6632aeb1211ae627878eda34660ddb8accbbcfb # v0.8.0
+  - uses: schubergphilis/mcvs-general-action@<sha> # v0.9.0
     with:
       testing-type: graphql-lint
       graphql-linter-target-path: schema

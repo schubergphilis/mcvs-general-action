@@ -75,8 +75,9 @@ install_graphql_linter() {
     return 1
   fi
 
-  mv "${bin}.download" "$bin"
-  chmod +x "$bin"
+  # install_graphql_linter runs inside $(...), where set -e does not apply.
+  mv "${bin}.download" "$bin" || return 1
+  chmod +x "$bin" || return 1
   echo "$bin"
 }
 

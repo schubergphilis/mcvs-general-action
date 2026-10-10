@@ -116,6 +116,44 @@ fake_download() {
     "${BATS_TEST_TMPDIR}/curl-args"
 }
 
+@test "install_graphql_linter fails when the download cannot be moved" {
+  fake_uname Linux x86_64
+  fake_download "a linter"
+  local expected
+  expected=$(printf 'a linter' | sha256sum)
+  eval "sha256_for() { echo ${expected%% *}; }"
+  mv() { return 1; }
+
+  run install_graphql_linter "$BATS_TEST_TMPDIR"
+  [ "$status" -eq 1 ]
+  [ -z "$output" ]
+}
+
+@test "file_sha256 prints only the digest" {
+  printf 'a linter' >"${BATS_TEST_TMPDIR}/file"
+  run file_sha256 "${BATS_TEST_TMPDIR}/file"
+  [ "$status" -eq 0 ]
+  [[ "$output" =~ ^[0-9a-f]{64}$ ]]
+}
+
+@test "file_sha256 falls back to shasum where sha256sum is missing" {
+  command() {
+    if [ "$1" = -v ] && [ "$2" = sha256sum ]; then
+      return 1
+    fi
+    builtin command "$@"
+  }
+  shasum() {
+    echo "$*" >"${BATS_TEST_TMPDIR}/shasum-args"
+    echo "0123abcd  $3"
+  }
+
+  run file_sha256 "${BATS_TEST_TMPDIR}/file"
+  [ "$status" -eq 0 ]
+  [ "$output" = 0123abcd ]
+  [ "$(cat "${BATS_TEST_TMPDIR}/shasum-args")" = "-a 256 ${BATS_TEST_TMPDIR}/file" ]
+}
+
 # Replace the install with a fake linter that records its arguments and
 # exits with <status>.
 fake_linter() {
