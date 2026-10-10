@@ -59,5 +59,6 @@ on that push the action checks out the full history itself, with
 it to a matrix: matrix jobs that race to create the same tag do not fail, but
 each of them needs `contents: write`.
 
-This repository releases itself the same way, see
+This repository releases itself the same way, with a checkout because it uses
+the action from its own checkout (`uses: $/`), see
 [`.github/workflows/tag.yml`](../.github/workflows/tag.yml).
