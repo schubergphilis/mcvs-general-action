@@ -1,12 +1,12 @@
 ---
-name: tag
+name: release
 "on":
   push:
     branches:
       - main
 concurrency:
   cancel-in-progress: false
-  group: tag
+  group: release
 permissions:
   contents: read
 jobs:
