@@ -131,7 +131,7 @@ run still gets one. When `gh release create` fails, the step looks for the
 release once more before failing, so matrix jobs that race to release the
 same tag do not go red.
 
-Self-tested by `.github/workflows/tag.yml`, which sets
+Self-tested by `.github/workflows/release.yml`, which sets
 `auto-release: "true"` so this repository releases itself on every push to
 `main`, and needs a `concurrency` group so two quick pushes do not race. The bump logic is unit tested with
 BATS in `tests/next-version.bats` (run `bats tests/`; the `bats` job in
@@ -250,7 +250,7 @@ Configuration enforces this via commitlint in `configs/commitlint.config.mjs`.
 - `configs/mcvs.markdownlint.yaml`: Markdown formatting rules
 - `configs/yamllint.yaml`: YAML formatting rules
 - `.github/workflows/general.yml`: Self-testing workflow
-- `.github/workflows/tag.yml`: Releases this repository on every push to
+- `.github/workflows/release.yml`: Releases this repository on every push to
   `main` with `auto-release: "true"`
 - `.github/workflows/mcvs-pr-validation.yml`: Additional PR validation
 

@@ -61,4 +61,4 @@ than adding it to a matrix: matrix jobs that race to create the same tag do
 not fail, but each of them needs `contents: write`.
 
 This repository releases itself the same way, see
-[`.github/workflows/tag.yml`](../.github/workflows/tag.yml).
+[`.github/workflows/release.yml`](../.github/workflows/release.yml).
