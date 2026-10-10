@@ -6,38 +6,55 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 MCVS-general-action is a composite GitHub Action that provides multiple security and quality testing capabilities for repositories. It operates as a single action with different testing modes, selected via the `testing-type` input parameter.
 
+User documentation is a lean `README.md` (intro and `## Quickstart`) plus pages
+in `docs/` (testing types, usage, inputs, security), each linked from the
+README's `## Documentation` section. Update those pages when behaviour changes,
+and keep relative links and `#anchor` fragments valid, as lint-links checks
+them.
+
 ## Architecture
 
 ### Composite Action Design
 
-The action is defined in `action.yml` as a composite action (not a Docker or JavaScript action). All logic is implemented as bash scripts that run directly in the GitHub Actions runner environment.
+The action is defined in `action.yml` as a composite action (not a Docker or JavaScript action). All logic is implemented as bash that runs directly in the GitHub Actions runner environment: inline `run` blocks in `action.yml`, except the lint-git checks, which live in `scripts/lint-git.sh` so that `tests/lint-git.sh` can test them.
 
 ### Testing Types
 
 The action implements six distinct testing modes, each triggered by the
-`testing-type` input:
+`testing-type` input. The first step fails on a missing or unknown value,
+because GitHub does not enforce `required` on composite action inputs and an
+unknown value would otherwise skip every step and pass. Keep its list in sync
+when adding or renaming a testing type.
 
 1. **lint-commit**: Validates commit messages using commitlint
    - Uses `@commitlint/config-conventional` for conventional commits format
-   - Checks all commits in the PR range (base.sha to head.sha)
+   - Checks all commits in the PR range, `refs/mcvs/base..HEAD` (see the
+     note under lint-git)
    - Configuration: `configs/commitlint.config.mjs`
 
 1. **lint-git**: Enforces Git workflow standards
    - Checks branch is up-to-date with the base branch (no commits behind)
    - Detects unwanted merges of the base branch into feature branch
-   - Identifies fixup/squash commits that should be squashed
+   - Identifies fixup/squash/amend commits that should be squashed
+   - Implemented in `scripts/lint-git.sh` (one subcommand per check:
+     `behind`, `merges`, `fixups`), covered by `tests/lint-git.sh`
 
-   Note: the workspace is a clone of the *head* repository, so `origin` is
-   the fork on a fork pull request. All three checks therefore compare
-   against `refs/mcvs/base`, which a dedicated step fetches from
-   `base.repo.full_name` at `base.ref`. Never reintroduce `origin/main`
-   here.
+   Note: the workspace is a clone of the *head* repository, checked out at
+   the immutable `head.sha`, so `HEAD` is the pull request head and `origin`
+   is the fork on a fork pull request, where `base.sha` may be absent. The
+   lint-git checks and lint-commit therefore compare against
+   `refs/mcvs/base`, which a dedicated step fetches from
+   `base.repo.full_name` at `base.ref`. Never reintroduce `origin/main`,
+   `base.sha` or `head.sha` here.
 
 1. **lint-action**: Scans GitHub Actions workflows with
    [zizmor](https://github.com/zizmorcore/zizmor-action)
    - Runs `zizmorcore/zizmor-action` with `min-severity: low`
    - `advanced-security` is controlled by the
-     `zizmor-action-advanced-security` input (default `"true"`)
+     `zizmor-action-advanced-security` input (default `"true"`). With
+     `"true"` zizmor uploads SARIF and does not fail the job on findings, so
+     the check only blocks through a code scanning ruleset; `"false"` fails
+     the job on findings
 
 1. **lint-links**: Checks links in Markdown, HTML and reStructuredText files
    with [lychee](https://github.com/lycheeverse/lychee)
@@ -96,6 +113,13 @@ The action tests itself using `.github/workflows/general.yml`, which:
 - Runs on pull requests
 - Uses a matrix strategy to test all testing-types
 - Uses the action from the current checkout (`uses: ./`)
+- Runs `tests/lint-git.sh` in the `lint-git-test` job
+
+The lint-git self-test only proves the checks pass on a clean branch, so
+`tests/lint-git.sh` builds fixture repositories (base-into-feature merge,
+topic merges, fixup!/squash!/amend! commits, a branch behind its base, a clean
+branch) and asserts the exit code of each check. Run it locally with
+`tests/lint-git.sh`, and extend it when changing `scripts/lint-git.sh`.
 
 To test changes locally:
 
@@ -106,7 +130,7 @@ To test changes locally:
 
 ### Manual Testing
 
-You cannot easily run this action locally since it's a GitHub Actions composite action. Test by:
+Apart from `tests/lint-git.sh`, you cannot easily run this action locally since it's a GitHub Actions composite action. Test by:
 
 1. Creating a PR in this repository
 1. Observing the workflow results in `.github/workflows/general.yml`
@@ -145,7 +169,9 @@ Configuration enforces this via commitlint in `configs/commitlint.config.mjs`.
 
 ## Configuration Files
 
-- `action.yml`: Main action definition with all testing logic
+- `action.yml`: Main action definition with the testing logic
+- `scripts/lint-git.sh`: The lint-git checks, run by `action.yml`
+- `tests/lint-git.sh`: Fixture-repository tests of `scripts/lint-git.sh`
 - `configs/commitlint.config.mjs`: Commit message linting rules
 - `configs/package.json` / `configs/package-lock.json`: Commitlint dependencies
 - `configs/mcvs.markdownlint.yaml`: Markdown formatting rules

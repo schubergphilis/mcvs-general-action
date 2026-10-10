@@ -5,13 +5,35 @@ description: |
 inputs:
   testing-type:
     description: |
-      The testing type, e.g. integration, unit or some other.
+      The testing type: lint-action, lint-commit, lint-git, lint-links,
+      markdownlint or yamllint.
+    required: true
   zizmor-action-advanced-security:
     default: "true"
-    description: Upload results to Advanced Security or not.
+    description: |
+      Upload lint-action results to Advanced Security or not. When "true",
+      findings do not fail the job; block on them with a code scanning
+      ruleset, or set "false" to fail the job on findings.
 runs:
   using: composite
   steps:
+    # GitHub does not enforce required inputs of a composite action, and an
+    # unknown testing-type would otherwise skip every step and pass.
+    - name: validate the testing type 🔎
+      env:
+        TESTING_TYPE: ${{ inputs.testing-type }}
+      run: |
+        types="lint-action lint-commit lint-git lint-links"
+        types+=" markdownlint yamllint"
+        for type in ${types}; do
+          if [[ "${TESTING_TYPE}" == "${type}" ]]; then
+            exit 0
+          fi
+        done
+        echo "::error::Unknown testing-type '${TESTING_TYPE}'," \
+          "use one of: ${types}" >&2
+        exit 1
+      shell: bash
     - if: |
         github.event_name == 'pull_request' &&
         (inputs.testing-type == 'lint-commit' ||
@@ -33,21 +55,8 @@ runs:
         min-severity: low
     - if: |
         github.event_name == 'pull_request' &&
-        inputs.testing-type == 'lint-commit'
-      run: |
-        CONFIGS_PATH="${GITHUB_ACTION_PATH}/configs"
-
-        npm ci --prefix "${CONFIGS_PATH}"
-
-        npx --prefix "${CONFIGS_PATH}" commitlint \
-          --config "$CONFIGS_PATH/commitlint.config.mjs" \
-          --from ${{ github.event.pull_request.base.sha }} \
-          --to ${{ github.event.pull_request.head.sha }} \
-          --verbose
-      shell: bash
-    - if: |
-        github.event_name == 'pull_request' &&
-        inputs.testing-type == 'lint-git'
+        (inputs.testing-type == 'lint-commit' ||
+          inputs.testing-type == 'lint-git')
       name: check out the base branch 🌳
       # yamllint disable-line rule:line-length
       uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -59,7 +68,8 @@ runs:
         repository: ${{ github.event.pull_request.base.repo.full_name }}
     - if: |
         github.event_name == 'pull_request' &&
-        inputs.testing-type == 'lint-git'
+        (inputs.testing-type == 'lint-commit' ||
+          inputs.testing-type == 'lint-git')
       run: |
         # origin points at the head repository, which the pull request
         # author controls, so compare against the base branch as cloned
@@ -70,62 +80,46 @@ runs:
       shell: bash
     - if: |
         github.event_name == 'pull_request' &&
-        inputs.testing-type == 'lint-git'
-      env:
-        BASE_REF: ${{ github.event.pull_request.base.ref }}
+        inputs.testing-type == 'lint-commit'
       run: |
-        commits_behind=$(git rev-list --count HEAD..refs/mcvs/base)
-        if (( commits_behind > 0 )); then
-          echo "❗ Branch is behind ${BASE_REF} by $commits_behind commits"
-          exit 1
-        fi
-        echo "✅ Branch is up to date with ${BASE_REF}"
+        CONFIGS_PATH="${GITHUB_ACTION_PATH}/configs"
+
+        npm ci --prefix "${CONFIGS_PATH}"
+
+        # HEAD is the pull request head sha checked out above.
+        npx --prefix "${CONFIGS_PATH}" commitlint \
+          --config "$CONFIGS_PATH/commitlint.config.mjs" \
+          --from refs/mcvs/base \
+          --to HEAD \
+          --verbose
       shell: bash
-    # yamllint disable rule:line-length
     - if: |
         github.event_name == 'pull_request' &&
         inputs.testing-type == 'lint-git'
+      name: check the branch is up to date with the base 🔄
+      env:
+        BASE_REF: ${{ github.event.pull_request.base.ref }}
+      run: |
+        "${GITHUB_ACTION_PATH}/scripts/lint-git.sh" behind refs/mcvs/base
+      shell: bash
+    - if: |
+        github.event_name == 'pull_request' &&
+        inputs.testing-type == 'lint-git'
+      name: check for merges of the base branch 🔀
       env:
         BASE_REF: ${{ github.event.pull_request.base.ref }}
         HEAD_REF: ${{ github.event.pull_request.head.ref }}
       run: |
-        BASE="refs/mcvs/base"
-
-        current_branch="${HEAD_REF}"
-
-        commits=$(git rev-list "${BASE}..HEAD" --merges)
-
-        for sha in $commits; do
-          p1=$(git rev-parse "$sha^1")
-          p2=$(git rev-parse "$sha^2")
-
-          if git merge-base --is-ancestor "${p1}" "${BASE}" && ! git merge-base --is-ancestor "${p2}" "${BASE}"; then
-            merged_from="${p1}"
-          elif git merge-base --is-ancestor "${p2}" "${BASE}" && ! git merge-base --is-ancestor "${p1}" "${BASE}"; then
-            merged_from="${p2}"
-          else
-            continue
-          fi
-
-          echo "❗ Detected a merge of ${BASE_REF} into ${current_branch} at commit ${sha}"
-          echo "  Commit message: $(git log --format=%s -n 1 $sha)"
-          exit 1
-        done
-
-        echo "✅ No merges of ${BASE_REF} detected in ${current_branch}"
-        exit 0
+        "${GITHUB_ACTION_PATH}/scripts/lint-git.sh" merges refs/mcvs/base
       shell: bash
     - if: |
         github.event_name == 'pull_request' &&
         inputs.testing-type == 'lint-git'
+      name: check for fixup, squash and amend commits 🧹
+      env:
+        BASE_REF: ${{ github.event.pull_request.base.ref }}
       run: |
-        fixup_commits=$(git log --oneline --grep="^fixup!" --grep="^squash!" refs/mcvs/base..HEAD)
-        if [ -n "$fixup_commits" ]; then
-          echo "❗ Found fixup or squash commits that should be squashed:"
-          echo "$fixup_commits"
-          exit 1
-        fi
-        echo "✅ No fixup or squash commits found"
+        "${GITHUB_ACTION_PATH}/scripts/lint-git.sh" fixups refs/mcvs/base
       shell: bash
     - if: inputs.testing-type == 'lint-links'
       name: check links 🔗
