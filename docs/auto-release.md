@@ -62,3 +62,44 @@ not fail, but each of them needs `contents: write`.
 
 This repository releases itself the same way, see
 [`.github/workflows/tag.yml`](../.github/workflows/tag.yml).
+
+## Building release assets
+
+The tag and the release are created with the workflow's `GITHUB_TOKEN`, and
+GitHub starts no workflow for events caused by that token. A workflow that
+builds release assets on a tag push, such as
+[mcvs-golang-action's releases](https://github.com/schubergphilis/mcvs-golang-action/blob/main/docs/releases.md),
+therefore does not run for an auto-released tag. `GITHUB_TOKEN` may still
+dispatch a workflow, so no personal access token is needed:
+
+1. Add `workflow_dispatch` to the triggers of the workflow that builds the
+   assets.
+1. Give the release step an `id`, grant the job `actions: write` and dispatch
+   that workflow on the new tag, which the `tag` output holds. It is empty
+   when nothing was released, so the dispatch only runs for a new release.
+
+```yml
+jobs:
+  mcvs-general-action:
+    permissions:
+      actions: write
+      contents: write
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - id: release
+        uses: schubergphilis/mcvs-general-action@4df2739030e57a41331bcf32d413a3c745561979 # v0.9.0
+        with:
+          auto-release: "true"
+      - if: steps.release.outputs.tag != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.release.outputs.tag }}
+        run: gh workflow run golang-releases.yml --ref "${TAG}"
+```
+
+The dispatched run has the tag as its ref, so `github.ref_name` is the new
+version, as on a tag push.

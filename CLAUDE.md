@@ -97,7 +97,11 @@ step at the top of `action.yml` allows for that case only. The release is
 `gh release create "$tag" --generate-notes`, so the tag is `vX.Y.Z`, the title
 equals the tag and the body is GitHub's generated "What's Changed" list, the
 same as the releases drafted by hand before; do not add `--title` or
-`--notes`. They check out the full history and then compute the next
+`--notes`. The step (`id: release`) writes the tag it created to the
+action's `tag` output, and nothing when it released nothing or found the
+release already there, so a caller can dispatch its asset-building workflow
+on the new tag (`docs/auto-release.md`): the tag, created with
+`GITHUB_TOKEN`, starts no workflow by itself. They check out the full history and then compute the next
 version with `scripts/next-version.sh`, which reads NUL-separated commit
 messages on stdin and prints `vX.Y.Z` (nothing when no commit warrants a
 release). `feat!:`/`BREAKING CHANGE:` bumps the major even below `1.0.0`.
