@@ -20,7 +20,7 @@ The action is defined in `action.yml` as a composite action (not a Docker or Jav
 
 ### Testing Types
 
-The action implements six distinct testing modes, each triggered by the
+The action implements seven distinct testing modes, each triggered by the
 `testing-type` input. The first step fails on a missing or unknown value,
 because GitHub does not enforce `required` on composite action inputs and an
 unknown value would otherwise skip every step and pass. Keep its list in sync
@@ -72,6 +72,19 @@ when adding or renaming a testing type.
 1. **yamllint**: Validates YAML file formatting
    - Uses hash-pinned dependencies for security (see below)
    - Configuration: `configs/yamllint.yaml`
+
+1. **graphql-lint**: Lints GraphQL schemas with
+   [graphql-linter](https://github.com/schubergphilis/graphql-linter)
+   - `scripts/graphql-lint.sh` downloads the release binary for the runner
+     and refuses to run it unless its SHA-256 matches the digest pinned next
+     to `GRAPHQL_LINTER_VERSION`
+   - Dependabot cannot bump a downloaded binary: bump the version and all
+     three digests together, taking the digests GitHub records for the
+     release assets (`gh api repos/schubergphilis/graphql-linter/releases/tags/<version> --jq '.assets[] | "\(.digest) \(.name)"'`)
+   - Needs graphql-linter `v0.2.5` or later; `v0.2.4` and older only run
+     inside a Go module
+   - Inputs: `graphql-linter-target-path` (default `.`) and
+     `graphql-linter-config-path`
 
 ### Auto-release on Push to the Default Branch
 
@@ -226,6 +239,9 @@ Configuration enforces this via commitlint in `configs/commitlint.config.mjs`.
 
 - `action.yml`: Main action definition with the testing logic
 - `scripts/lint-git.sh`: The lint-git checks, run by `action.yml`
+- `scripts/graphql-lint.sh`: Downloads, verifies and runs the pinned
+  graphql-linter, unit tested by `tests/graphql-lint.bats`; the self-test
+  lints `tests/testdata/graphql/schema.graphql`
 - `tests/lint-git.sh`: Fixture-repository tests of `scripts/lint-git.sh`
 - `scripts/next-version.sh`: Conventional-commit semver bump, unit tested
   by `tests/next-version.bats`

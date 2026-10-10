@@ -10,7 +10,8 @@ The Mission Critical Vulnerability Scanner (MCVS) General Action provides automa
 ## Quickstart
 
 1. Pick the checks you need from the [testing types](docs/testing-types.md);
-   the workflow below runs all of them.
+   the workflow below runs all of them except `graphql-lint`, which only
+   applies to repositories with GraphQL schemas.
 1. Keep `security-events: write` if you run `lint-action` with the default
    Advanced Security upload, see [Inputs](docs/inputs.md).
 1. Create `.github/workflows/general.yml` with the following content:

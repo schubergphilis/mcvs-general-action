@@ -8,6 +8,8 @@ out.
 | Input                           | Description                                                                                              | Required                          | Default |
 | :------------------------------ | :------------------------------------------------------------------------------------------------------- | :-------------------------------- | :------ |
 | auto-release                    | Create the next tag and its release on a push to the default branch, see [Auto-release](auto-release.md) | No                                | false   |
+| graphql-linter-config-path      | Configuration file for `graphql-lint`; defaults to `.graphql-linter.yml` or `.graphql-linter.yaml`       | No                                | ""      |
+| graphql-linter-target-path      | Directory or file with the schemas that `graphql-lint` checks                                            | No                                | .       |
 | testing-type                    | Type of test to run                                                                                      | Unless `auto-release` is `"true"` | N/A     |
 | zizmor-action-advanced-security | Upload `lint-action` results to Advanced Security                                                        | No                                | true    |
 
