@@ -3,6 +3,26 @@
 Set one of these values as the `testing-type` input, see
 [Inputs](inputs.md).
 
+- **`graphql-lint`**: Lints GraphQL schemas (`.graphql`, `.graphqls`)
+  - Uses [graphql-linter](https://github.com/schubergphilis/graphql-linter):
+    the `graphql-schema-linter` rules plus Apollo Federation validation
+  - Downloads a pinned release binary and verifies its SHA-256 before running
+    it, on `linux/amd64`, `linux/arm64` and `darwin/arm64` runners
+  - Lints `graphql-linter-target-path` (default: the repository root); the
+    files of each directory are checked together as one schema
+  - Configuration: `.graphql-linter.yml` or `.graphql-linter.yaml`, or
+    `graphql-linter-config-path`, see the graphql-linter
+    [configuration](https://github.com/schubergphilis/graphql-linter/blob/v0.2.5/docs/configuration.md)
+  - Fails when no schema file is found, so only add it where there are
+    schemas
+
+  ```yml
+  - uses: schubergphilis/mcvs-general-action@b6632aeb1211ae627878eda34660ddb8accbbcfb # v0.8.0
+    with:
+      testing-type: graphql-lint
+      graphql-linter-target-path: schema
+  ```
+
 - **`lint-action`**: Validates GitHub Actions workflow files for security issues
   - Uses [zizmor](https://github.com/zizmorcore/zizmor) to detect security vulnerabilities
   - Checks at minimum `low` severity level

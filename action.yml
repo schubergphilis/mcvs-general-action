@@ -9,10 +9,22 @@ inputs:
       Create the next semver tag and its GitHub Release on a push to the
       default branch. The job needs contents: write. When "true",
       testing-type may be omitted.
+  graphql-linter-config-path:
+    default: ""
+    description: |
+      The graphql-linter configuration file for the graphql-lint
+      testing-type. Defaults to .graphql-linter.yml or .graphql-linter.yaml
+      in the working directory.
+  graphql-linter-target-path:
+    default: .
+    description: |
+      The directory or file with the GraphQL schemas that the graphql-lint
+      testing-type checks.
   testing-type:
     description: |
-      The testing type: lint-action, lint-commit, lint-git, lint-links,
-      markdownlint or yamllint. Required unless auto-release is "true".
+      The testing type: graphql-lint, lint-action, lint-commit, lint-git,
+      lint-links, markdownlint or yamllint. Required unless auto-release is
+      "true".
     required: false
   zizmor-action-advanced-security:
     default: "true"
@@ -34,7 +46,7 @@ runs:
         if [[ -z "${TESTING_TYPE}" && "${AUTO_RELEASE}" == "true" ]]; then
           exit 0
         fi
-        types="lint-action lint-commit lint-git lint-links"
+        types="graphql-lint lint-action lint-commit lint-git lint-links"
         types+=" markdownlint yamllint"
         for type in ${types}; do
           if [[ "${TESTING_TYPE}" == "${type}" ]]; then
@@ -131,6 +143,15 @@ runs:
         BASE_REF: ${{ github.event.pull_request.base.ref }}
       run: |
         "${GITHUB_ACTION_PATH}/scripts/lint-git.sh" fixups refs/mcvs/base
+      shell: bash
+    - if: inputs.testing-type == 'graphql-lint'
+      name: lint GraphQL schemas 🕸️
+      env:
+        CONFIG_PATH: ${{ inputs.graphql-linter-config-path }}
+        TARGET_PATH: ${{ inputs.graphql-linter-target-path }}
+      run: |
+        "${GITHUB_ACTION_PATH}/scripts/graphql-lint.sh" \
+          "${TARGET_PATH}" "${CONFIG_PATH}"
       shell: bash
     - if: inputs.testing-type == 'lint-links'
       name: check links 🔗
