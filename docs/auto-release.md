@@ -88,9 +88,6 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
       - id: release
         uses: schubergphilis/mcvs-general-action@<sha> # v0.10.0
         with:
