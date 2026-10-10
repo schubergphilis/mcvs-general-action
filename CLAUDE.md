@@ -78,9 +78,19 @@ when adding or renaming a testing type.
    - `scripts/graphql-lint.sh` downloads the release binary for the runner
      and refuses to run it unless its SHA-256 matches the digest pinned next
      to `GRAPHQL_LINTER_VERSION`
-   - Dependabot cannot bump a downloaded binary: bump the version and all
-     three digests together, taking the digests GitHub records for the
-     release assets (`gh api repos/schubergphilis/graphql-linter/releases/tags/<version> --jq '.assets[] | "\(.digest) \(.name)"'`)
+   - Dependabot cannot bump a downloaded binary, so
+     `.github/workflows/graphql-linter-updater.yml` runs
+     `scripts/graphql-linter-updater.sh` weekly: it bumps the version and all
+     three digests together, from the digests GitHub records for the release
+     assets, and opens or updates a `fix:` pull request from the
+     `graphql-linter-updater` branch. It fails rather than pin a partial set
+     when a platform binary is missing. Covered by
+     `tests/graphql-linter-updater.bats`
+   - That pull request is opened with `GITHUB_TOKEN`, which starts no
+     `pull_request` run, so the script dispatches `general.yml` on the branch
+     (hence its `workflow_dispatch` trigger and `actions: write`). Its
+     `pull_request`-only steps (lint-commit, lint-git, lint-action) are skipped
+     then; the rest, including graphql-lint with the new pin, runs
    - Needs graphql-linter `v0.2.5` or later; `v0.2.4` and older only run
      inside a Go module
    - Inputs: `graphql-linter-target-path` (default `.`) and
@@ -243,6 +253,9 @@ Configuration enforces this via commitlint in `configs/commitlint.config.mjs`.
   graphql-linter, unit tested by `tests/graphql-lint.bats`; the self-test
   lints `tests/testdata/graphql/schema.graphql`
 - `tests/lint-git.sh`: Fixture-repository tests of `scripts/lint-git.sh`
+- `scripts/graphql-linter-updater.sh`: Weekly bump of the graphql-linter
+  pin in `scripts/graphql-lint.sh`, unit tested by
+  `tests/graphql-linter-updater.bats`
 - `scripts/next-version.sh`: Conventional-commit semver bump, unit tested
   by `tests/next-version.bats`
 - `configs/commitlint.config.mjs`: Commit message linting rules
@@ -252,6 +265,8 @@ Configuration enforces this via commitlint in `configs/commitlint.config.mjs`.
 - `.github/workflows/general.yml`: Self-testing workflow
 - `.github/workflows/tag.yml`: Releases this repository on every push to
   `main` with `auto-release: "true"`
+- `.github/workflows/graphql-linter-updater.yml`: Runs
+  `scripts/graphql-linter-updater.sh` every Monday
 - `.github/workflows/mcvs-pr-validation.yml`: Additional PR validation
 
 ## Modifying Testing Logic

@@ -1,8 +1,14 @@
 ---
 name: general
-"on": pull_request
+# workflow_dispatch: graphql-linter-updater.yml dispatches this workflow on
+# the pull request branch it opens with GITHUB_TOKEN, which starts no
+# pull_request run. The pull_request-only steps of the action are skipped then.
+"on":
+  pull_request:
+  workflow_dispatch:
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  # yamllint disable-line rule:line-length
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 permissions:
   contents: read
