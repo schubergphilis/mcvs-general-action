@@ -19,3 +19,9 @@ jobs:
         with:
           testing-type: lint-commit
 ```
+
+## Releasing on merge to main
+
+To tag and release on every merge to `main`, opt in with
+`auto-release: "true"` in the workflow from
+[Auto-release](auto-release.md#releasing-on-merge-to-main).

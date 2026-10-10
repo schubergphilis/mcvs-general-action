@@ -51,4 +51,5 @@ The Mission Critical Vulnerability Scanner (MCVS) General Action provides automa
 - [Testing types](docs/testing-types.md)
 - [Usage](docs/usage.md)
 - [Inputs](docs/inputs.md)
+- [Auto-release](docs/auto-release.md)
 - [Security considerations](docs/security.md)

@@ -3,11 +3,17 @@ name: mcvs-general-action
 description: |
   The Mission Critical Vulnerability Scanner (MCVS) General action.
 inputs:
+  auto-release:
+    default: "false"
+    description: |
+      Create the next semver tag and its GitHub Release on a push to the
+      default branch. The job needs contents: write. When "true",
+      testing-type may be omitted.
   testing-type:
     description: |
       The testing type: lint-action, lint-commit, lint-git, lint-links,
-      markdownlint or yamllint.
-    required: true
+      markdownlint or yamllint. Required unless auto-release is "true".
+    required: false
   zizmor-action-advanced-security:
     default: "true"
     description: |
@@ -18,11 +24,16 @@ runs:
   using: composite
   steps:
     # GitHub does not enforce required inputs of a composite action, and an
-    # unknown testing-type would otherwise skip every step and pass.
+    # unknown testing-type would otherwise skip every step and pass. A job
+    # that only releases leaves testing-type empty.
     - name: validate the testing type 🔎
       env:
+        AUTO_RELEASE: ${{ inputs.auto-release }}
         TESTING_TYPE: ${{ inputs.testing-type }}
       run: |
+        if [[ -z "${TESTING_TYPE}" && "${AUTO_RELEASE}" == "true" ]]; then
+          exit 0
+        fi
         types="lint-action lint-commit lint-git lint-links"
         types+=" markdownlint yamllint"
         for type in ${types}; do
@@ -144,4 +155,59 @@ runs:
         python3 -m pip install --require-hashes --user \
           -r "${GITHUB_ACTION_PATH}/configs/requirements.txt"
         yamllint -c "${GITHUB_ACTION_PATH}/configs/yamllint.yaml" .
+      shell: bash
+    - if: |
+        github.event_name == 'push' &&
+        github.ref_name == github.event.repository.default_branch &&
+        inputs.auto-release == 'true'
+      name: check out the full history 🌳
+      # yamllint disable-line rule:line-length
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        fetch-depth: 0
+        persist-credentials: false
+    - if: |
+        github.event_name == 'push' &&
+        github.ref_name == github.event.repository.default_branch &&
+        inputs.auto-release == 'true'
+      name: create a tag and a release 🏷️
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        # Sourcing only defines the functions; last_tag is unit tested in
+        # tests/next-version.bats.
+        # shellcheck source=scripts/next-version.sh
+        source "${GITHUB_ACTION_PATH}/scripts/next-version.sh"
+        last_tag=$(last_tag)
+
+        tag=$(git log -z --format=%B "${last_tag:+${last_tag}..}HEAD" |
+          bash "${GITHUB_ACTION_PATH}/scripts/next-version.sh" \
+            "${last_tag:-v0.0.0}")
+
+        if [ -z "$tag" ]; then
+          echo "✅ Nothing to release since ${last_tag:-the first commit}"
+          exit 0
+        fi
+
+        # Deliberately checks the release, not the tag: a tag left behind
+        # by a half-finished run still needs its release.
+        if gh release view "$tag" >/dev/null 2>&1; then
+          echo "✅ ${tag} is already released"
+          exit 0
+        fi
+
+        # gh creates the tag at --target, so no credentials are needed in
+        # the workspace checkout. A caller that runs the action as a matrix
+        # on push has every job race past the check above; the losers find
+        # the release on a second look instead of failing.
+        if ! gh release create "$tag" --target "${GITHUB_SHA}" \
+          --generate-notes; then
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "✅ ${tag} was released by a concurrent job"
+            exit 0
+          fi
+          echo "❗ Could not create ${tag}; the job needs contents: write" >&2
+          exit 1
+        fi
+        echo "✅ Created ${tag}"
       shell: bash
