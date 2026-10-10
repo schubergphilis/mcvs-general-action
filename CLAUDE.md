@@ -73,11 +73,18 @@ when adding or renaming a testing type.
    - Uses hash-pinned dependencies for security (see below)
    - Configuration: `configs/yamllint.yaml`
 
-### Tagging on Push to the Default Branch
+### Auto-release on Push to the Default Branch
 
 Two steps at the end of `action.yml` run on `push` to the default branch,
-gated by the `tag-enabled` input (default `"true"`) instead of by
-`testing-type`. They check out the full history and then compute the next
+gated by the opt-in `auto-release` input (default `"false"`) instead of by
+`testing-type`. Keep the default `"false"`: turning it on for every caller
+would make their push jobs fail on `contents: read`. With
+`auto-release: "true"` the `testing-type` may be empty, which the validation
+step at the top of `action.yml` allows for that case only. The release is
+`gh release create "$tag" --generate-notes`, so the tag is `vX.Y.Z`, the title
+equals the tag and the body is GitHub's generated "What's Changed" list, the
+same as the releases drafted by hand before; do not add `--title` or
+`--notes`. They check out the full history and then compute the next
 version with `scripts/next-version.sh`, which reads NUL-separated commit
 messages on stdin and prints `vX.Y.Z` (nothing when no commit warrants a
 release). `feat!:`/`BREAKING CHANGE:` bumps the major even below `1.0.0`.
@@ -109,8 +116,9 @@ run still gets one. When `gh release create` fails, the step looks for the
 release once more before failing, so matrix jobs that race to release the
 same tag do not go red.
 
-Self-tested by `.github/workflows/tag.yml`, which needs a `concurrency`
-group so two quick pushes do not race. The bump logic is unit tested with
+Self-tested by `.github/workflows/tag.yml`, which sets
+`auto-release: "true"` so this repository releases itself on every push to
+`main`, and needs a `concurrency` group so two quick pushes do not race. The bump logic is unit tested with
 BATS in `test/next-version.bats` (run `bats test/`; the `bats` job in
 `general.yml` runs it on every pull request). The tests build throwaway
 repositories so they exercise real `git log` output, and `source` the script,
@@ -224,7 +232,8 @@ Configuration enforces this via commitlint in `configs/commitlint.config.mjs`.
 - `configs/mcvs.markdownlint.yaml`: Markdown formatting rules
 - `configs/yamllint.yaml`: YAML formatting rules
 - `.github/workflows/general.yml`: Self-testing workflow
-- `.github/workflows/tag.yml`: Self-testing workflow for tagging
+- `.github/workflows/tag.yml`: Releases this repository on every push to
+  `main` with `auto-release: "true"`
 - `.github/workflows/mcvs-pr-validation.yml`: Additional PR validation
 
 ## Modifying Testing Logic

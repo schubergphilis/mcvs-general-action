@@ -1,9 +1,10 @@
-# Tagging and releases
+# Auto-release
 
-On a push to the default branch, the action creates the next semver tag and a
-GitHub Release with auto-generated notes. No `testing-type` is involved: the
-step is enabled by default and only runs on that event. Set
-`tag-enabled: "false"` to turn it off.
+With `auto-release: "true"`, a push to the default branch creates the next
+semver tag and a GitHub Release whose notes GitHub generates from the merged
+pull requests, the same "What's Changed" list and "Full Changelog" link as a
+release drafted by hand. It is off by default and not tied to a
+`testing-type`, which may then be left out.
 
 The bump is derived from the Conventional Commit messages since the latest
 `vX.Y.Z` tag:
@@ -18,27 +19,25 @@ The bump is derived from the Conventional Commit messages since the latest
 Breaking changes bump the major even below `1.0.0`. When the version is
 already released the step is a no-op, so a rerun cannot clobber a release.
 
-Because this is on by default and is not tied to a `testing-type`, a
-repository that already calls this action on a push to its default branch —
-for `yamllint`, for instance — starts creating tags and releases after
-upgrading. If that job runs with `contents: read`, it now fails when it
-tries to create the release. Grant `contents: write` or set
-`tag-enabled: "false"` to opt out.
+With squash merges the commit on the default branch carries the pull
+request title and, depending on the repository settings, every commit
+message of the branch, so a `BREAKING CHANGE:` footer in any of them bumps
+the major.
 
-## Tagging on merge to main
+## Releasing on merge to main
 
-Create a `.github/workflows/tag.yml` file with the following content:
+Create a `.github/workflows/release.yml` file with the following content:
 
 ```yml
 ---
-name: tag
+name: release
 "on":
   push:
     branches:
       - main
 concurrency:
   cancel-in-progress: false
-  group: tag
+  group: release
 permissions:
   contents: read
 jobs:
@@ -50,10 +49,15 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: schubergphilis/mcvs-general-action@v1.0.0
+      - uses: schubergphilis/mcvs-general-action@v0.8.0
+        with:
+          auto-release: "true"
 ```
 
 The job needs `contents: write`, and the `concurrency` group serialises two
 pushes that land in quick succession. Keep it in its own workflow rather
 than adding it to a matrix: matrix jobs that race to create the same tag do
 not fail, but each of them needs `contents: write`.
+
+This repository releases itself the same way, see
+[`.github/workflows/tag.yml`](../.github/workflows/tag.yml).
