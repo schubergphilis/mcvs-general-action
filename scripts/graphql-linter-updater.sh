@@ -63,6 +63,10 @@ pin() {
   local script=$1 tag=$2 platform digest
   sed -i "s/^GRAPHQL_LINTER_VERSION=.*/GRAPHQL_LINTER_VERSION=${tag}/" \
     "$script" || return 1
+  if ! grep -q "^GRAPHQL_LINTER_VERSION=${tag}$" "$script"; then
+    echo "❗ could not pin GRAPHQL_LINTER_VERSION in ${script}" >&2
+    return 1
+  fi
   while read -r platform digest; do
     sed -i "s/^\(  ${platform}) echo \)[0-9a-f]\{64\}/\1${digest}/" \
       "$script" || return 1
@@ -86,13 +90,27 @@ branch instead.
 BODY
 }
 
-# Open a pull request from UPDATER_BRANCH, or update the open one, with
-# <title> and <body>. REST rather than gh pr, which needs GraphQL scopes.
-open_or_update_pr() {
-  local title=$1 body=$2 number
-  number=$(gh api "repos/${GITHUB_REPOSITORY}/pulls" -X GET \
+# Print the number of the open pull request from UPDATER_BRANCH, if any.
+# REST rather than gh pr, which needs GraphQL scopes.
+open_pr_number() {
+  gh api "repos/${GITHUB_REPOSITORY}/pulls" -X GET \
     -f head="${GITHUB_REPOSITORY%%/*}:${UPDATER_BRANCH}" -f state=open \
-    --jq '.[0].number // empty') || return 1
+    --jq '.[0].number // empty'
+}
+
+# Print the GRAPHQL_LINTER_VERSION pinned on UPDATER_BRANCH, if it exists.
+proposed_version() {
+  local content
+  content=$(gh api \
+    "repos/${GITHUB_REPOSITORY}/contents/${GRAPHQL_LINT_SCRIPT}?ref=${UPDATER_BRANCH}" \
+    --jq .content 2>/dev/null) || return 0
+  base64 -d <<<"$content" 2>/dev/null | pinned_version /dev/stdin
+}
+
+# Open a pull request from UPDATER_BRANCH, or update the open one <number>,
+# with <title> and <body>.
+open_or_update_pr() {
+  local number=$1 title=$2 body=$3
   if [[ -n "$number" ]]; then
     gh api "repos/${GITHUB_REPOSITORY}/pulls/${number}" -X PATCH \
       -f title="$title" -f body="$body" --jq .html_url
@@ -106,27 +124,31 @@ open_or_update_pr() {
 main() {
   set -euo pipefail
 
-  local pinned latest proposed digests title
+  local pinned latest number digests title
   pinned=$(pinned_version "$GRAPHQL_LINT_SCRIPT")
-  latest=$(latest_version)
+  if [[ ! "$pinned" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    echo "❗ no GRAPHQL_LINTER_VERSION=vX.Y.Z in ${GRAPHQL_LINT_SCRIPT}" >&2
+    return 1
+  fi
+  # Explicit, because set -e is ignored when main runs as a condition.
+  latest=$(latest_version) || return
   if ! newer "$latest" "$pinned"; then
     echo "✅ graphql-linter ${pinned} is the latest release"
     return
   fi
 
   # Skip a run that would only rewrite the open pull request's commit, which
-  # would dispatch its checks again for nothing.
-  proposed=$(gh api \
-    "repos/${GITHUB_REPOSITORY}/contents/${GRAPHQL_LINT_SCRIPT}?ref=${UPDATER_BRANCH}" \
-    --jq .content 2>/dev/null | base64 -d 2>/dev/null | pinned_version /dev/stdin) ||
-    proposed=""
-  if [[ "$proposed" == "$latest" ]]; then
-    echo "✅ graphql-linter ${latest} is already proposed on ${UPDATER_BRANCH}"
+  # would dispatch its checks again for nothing. Only with an open pull
+  # request: a branch left behind by a failed run or a closed pull request
+  # must still be proposed.
+  number=$(open_pr_number) || return
+  if [[ -n "$number" && "$(proposed_version)" == "$latest" ]]; then
+    echo "✅ graphql-linter ${latest} is already proposed in #${number}"
     return
   fi
 
-  digests=$(release_digests "$latest")
-  pin "$GRAPHQL_LINT_SCRIPT" "$latest" <<<"$digests"
+  digests=$(release_digests "$latest") || return
+  pin "$GRAPHQL_LINT_SCRIPT" "$latest" <<<"$digests" || return
 
   title="fix: bump graphql-linter from ${pinned} to ${latest}"
   # Only the file this updater owns, never git add .
@@ -140,7 +162,7 @@ main() {
   git -c credential.helper= -c credential.helper='!gh auth git-credential' \
     push --force --quiet origin "HEAD:refs/heads/${UPDATER_BRANCH}"
 
-  open_or_update_pr "$title" "$(pr_body "$pinned" "$latest")"
+  open_or_update_pr "$number" "$title" "$(pr_body "$pinned" "$latest")"
   gh workflow run general.yml --ref "$UPDATER_BRANCH"
 }
 
