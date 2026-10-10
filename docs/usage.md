@@ -19,3 +19,8 @@ jobs:
         with:
           testing-type: lint-commit
 ```
+
+## Tagging on merge to main
+
+To tag and release on every merge to `main`, add the workflow from
+[Tagging and releases](tagging.md#tagging-on-merge-to-main).

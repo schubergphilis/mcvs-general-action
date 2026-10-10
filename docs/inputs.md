@@ -4,10 +4,11 @@ The `testing-type` values are listed under [Testing types](testing-types.md).
 The action fails on a missing or unknown value rather than silently skipping
 every check.
 
-| Input                           | Description                                       | Required | Default |
-| :------------------------------ | :------------------------------------------------ | :------- | :------ |
-| testing-type                    | Type of test to run                               | Yes      | N/A     |
-| zizmor-action-advanced-security | Upload `lint-action` results to Advanced Security | No       | true    |
+| Input                           | Description                                                                             | Required | Default |
+| :------------------------------ | :-------------------------------------------------------------------------------------- | :------- | :------ |
+| tag-enabled                     | Tag and release on a push to the default branch, see [Tagging and releases](tagging.md) | No       | true    |
+| testing-type                    | Type of test to run                                                                     | Yes      | N/A     |
+| zizmor-action-advanced-security | Upload `lint-action` results to Advanced Security                                       | No       | true    |
 
 With `zizmor-action-advanced-security` set to `true`, zizmor writes SARIF that
 is uploaded to code scanning, which needs the `security-events: write`
