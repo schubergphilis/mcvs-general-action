@@ -31,6 +31,14 @@ fake_download() {
   }
 }
 
+# Make sha256_for return the SHA-256 of <content> for every platform.
+fake_digest_of() {
+  local sum
+  sum=$(printf '%s' "$1" | sha256sum)
+  FAKE_SHA=${sum%% *}
+  sha256_for() { echo "$FAKE_SHA"; }
+}
+
 @test "platform maps Linux x86_64 to linux-amd64" {
   fake_uname Linux x86_64
   run platform
@@ -82,9 +90,7 @@ fake_download() {
 @test "install_graphql_linter installs a download that matches the digest" {
   fake_uname Linux x86_64
   fake_download "a linter"
-  local expected
-  expected=$(printf 'a linter' | sha256sum)
-  eval "sha256_for() { echo ${expected%% *}; }"
+  fake_digest_of "a linter"
 
   run install_graphql_linter "$BATS_TEST_TMPDIR"
   [ "$status" -eq 0 ]
@@ -119,9 +125,7 @@ fake_download() {
 @test "install_graphql_linter fails when the download cannot be moved" {
   fake_uname Linux x86_64
   fake_download "a linter"
-  local expected
-  expected=$(printf 'a linter' | sha256sum)
-  eval "sha256_for() { echo ${expected%% *}; }"
+  fake_digest_of "a linter"
   mv() { return 1; }
 
   run install_graphql_linter "$BATS_TEST_TMPDIR"
@@ -152,6 +156,24 @@ fake_download() {
   [ "$status" -eq 0 ]
   [ "$output" = 0123abcd ]
   [ "$(cat "${BATS_TEST_TMPDIR}/shasum-args")" = "-a 256 ${BATS_TEST_TMPDIR}/file" ]
+}
+
+@test "file_sha256 fails when sha256sum fails" {
+  sha256sum() { return 1; }
+  run file_sha256 "${BATS_TEST_TMPDIR}/file"
+  [ "$status" -ne 0 ]
+}
+
+@test "file_sha256 fails when the shasum fallback fails" {
+  command() {
+    if [ "$1" = -v ] && [ "$2" = sha256sum ]; then
+      return 1
+    fi
+    builtin command "$@"
+  }
+  shasum() { return 1; }
+  run file_sha256 "${BATS_TEST_TMPDIR}/file"
+  [ "$status" -ne 0 ]
 }
 
 # Replace the install with a fake linter that records its arguments and
@@ -197,6 +219,16 @@ fake_linter() {
   fake_linter 0
   RUNNER_TEMP=$BATS_TEST_TMPDIR run main
   [ "$status" -eq 0 ]
+  run compgen -G "${BATS_TEST_TMPDIR}/graphql-linter.*"
+  [ "$status" -ne 0 ]
+}
+
+@test "main stops and cleans up when the install fails" {
+  install_graphql_linter() { return 3; }
+  RUNNER_TEMP=$BATS_TEST_TMPDIR run main
+  # 3 is the install's status; 127 would mean an empty path was executed.
+  [ "$status" -eq 3 ]
+  [[ "$output" != *"command not found"* ]]
   run compgen -G "${BATS_TEST_TMPDIR}/graphql-linter.*"
   [ "$status" -ne 0 ]
 }

@@ -85,10 +85,12 @@ main() {
   set -euo pipefail
 
   local target=${1:-.} config=${2:-} bin
+  # Global, not local: the EXIT trap runs after main has returned.
   GRAPHQL_LINTER_DIR=$(mktemp -d "${RUNNER_TEMP:-${TMPDIR:-/tmp}}/graphql-linter.XXXXXX")
   trap 'rm -rf "${GRAPHQL_LINTER_DIR}"' EXIT
 
-  bin=$(install_graphql_linter "${GRAPHQL_LINTER_DIR}")
+  # Explicit, because set -e is ignored when main runs as a condition.
+  bin=$(install_graphql_linter "${GRAPHQL_LINTER_DIR}") || return
 
   local args=(-targetPath "$target")
   if [[ -n "$config" ]]; then
