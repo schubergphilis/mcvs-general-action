@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: schubergphilis/mcvs-general-action@9705f65655a1848a02c368b91d14185b065ebdb5 # v0.7.3
+      - uses: schubergphilis/mcvs-general-action@b6632aeb1211ae627878eda34660ddb8accbbcfb # v0.8.0
         with:
           testing-type: lint-commit
 ```
