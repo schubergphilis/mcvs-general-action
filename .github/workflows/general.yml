@@ -50,4 +50,4 @@ jobs:
           detik-install: false
           file-install: false
           support-install: false
-      - run: bats test/
+      - run: bats tests/

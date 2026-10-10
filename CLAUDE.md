@@ -96,16 +96,18 @@ bug:
   The latter writes a newline *after* every NUL, so every record but the
   first arrives with a leading newline, loses its subject and is silently
   classified as no bump. The script strips that newline defensively, and
-  `test/next-version.bats` covers both framings.
+  `tests/next-version.bats` covers both framings.
 - The read loop must not `break`. Closing stdin early makes `git log` die of
   SIGPIPE once its output passes the pipe buffer, and `shell: bash` runs
   with `-eo pipefail`, so the step fails with 141 instead of releasing.
-- Pick the baseline tag with `git tag --merged HEAD --list "v*"
-  --sort=-v:refname` filtered through a strict regex, not with `git
+- The baseline tag comes from `last_tag` in `scripts/next-version.sh`,
+  which the step sources: `git tag --merged HEAD --list "v*"
+  --sort=-v:refname` filtered through `SEMVER_TAG_PATTERN`, not `git
   describe --match`. `--match` is an fnmatch glob that also accepts
-  `v1.0.0-rc1`, which the script rejects, failing every push to main. Use a
-  here-string rather than piping into `grep -m1`, or grep's early exit
-  SIGPIPEs `git tag`.
+  `v1.0.0-rc1`, which the script rejects, failing every push to main. The
+  pattern also rejects leading zeros, which bash arithmetic would read as
+  octal. Use a here-string rather than piping into `grep -m1`, or grep's
+  early exit SIGPIPEs `git tag`.
 
 The release is created with `gh release create "$tag" --target
 "$GITHUB_SHA" --generate-notes`, which creates the tag as a side effect.
@@ -119,7 +121,7 @@ same tag do not go red.
 Self-tested by `.github/workflows/tag.yml`, which sets
 `auto-release: "true"` so this repository releases itself on every push to
 `main`, and needs a `concurrency` group so two quick pushes do not race. The bump logic is unit tested with
-BATS in `test/next-version.bats` (run `bats test/`; the `bats` job in
+BATS in `tests/next-version.bats` (run `bats tests/`; the `bats` job in
 `general.yml` runs it on every pull request). The tests build throwaway
 repositories so they exercise real `git log` output, and `source` the script,
 so keep its logic in functions behind the `main` source guard.
@@ -226,7 +228,7 @@ Configuration enforces this via commitlint in `configs/commitlint.config.mjs`.
 - `scripts/lint-git.sh`: The lint-git checks, run by `action.yml`
 - `tests/lint-git.sh`: Fixture-repository tests of `scripts/lint-git.sh`
 - `scripts/next-version.sh`: Conventional-commit semver bump, unit tested
-  by `test/next-version.bats`
+  by `tests/next-version.bats`
 - `configs/commitlint.config.mjs`: Commit message linting rules
 - `configs/package.json` / `configs/package-lock.json`: Commitlint dependencies
 - `configs/mcvs.markdownlint.yaml`: Markdown formatting rules

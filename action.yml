@@ -174,13 +174,11 @@ runs:
       env:
         GH_TOKEN: ${{ github.token }}
       run: |
-        # The highest reachable vX.Y.Z tag. --match is an fnmatch glob, so
-        # it would also accept v1.0.0-rc1, which the version bump cannot
-        # parse; grep on a here-string instead, because grep -m1 in a pipe
-        # would SIGPIPE git on a repository with many tags.
-        tags=$(git tag --merged HEAD --list "v*" --sort=-v:refname)
-        last_tag=$(grep -m1 -E "^v[0-9]+\.[0-9]+\.[0-9]+$" <<<"$tags" ||
-          true)
+        # Sourcing only defines the functions; last_tag is unit tested in
+        # tests/next-version.bats.
+        # shellcheck source=scripts/next-version.sh
+        source "${GITHUB_ACTION_PATH}/scripts/next-version.sh"
+        last_tag=$(last_tag)
 
         tag=$(git log -z --format=%B "${last_tag:+${last_tag}..}HEAD" |
           bash "${GITHUB_ACTION_PATH}/scripts/next-version.sh" \
