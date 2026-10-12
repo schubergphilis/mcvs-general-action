@@ -61,7 +61,7 @@ each of them needs `contents: write`.
 
 This repository releases itself the same way, with a checkout because it uses
 the action from its own checkout (`uses: $/`), see
-[`.github/workflows/tag.yml`](../.github/workflows/tag.yml).
+[`.github/workflows/release.yml`](../.github/workflows/release.yml).
 
 ## Building release assets
 
