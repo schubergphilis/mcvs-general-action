@@ -19,6 +19,13 @@ The bump is derived from the Conventional Commit messages since the latest
 Breaking changes bump the major even below `1.0.0`. When the version is
 already released the step is a no-op, so a rerun cannot clobber a release.
 
+A fork never auto-releases, even with `auto-release: "true"`: the upstream
+repository is leading for tags and releases, which are mirrored into the fork.
+Syncing a fork pushes to its default branch, so without this the fork would
+create releases that do not match upstream's. The job logs a notice that
+auto-release is skipped, passes, and leaves the `tag` output empty. There is
+no input to override this.
+
 With squash merges the commit on the default branch carries the pull
 request title and, depending on the repository settings, every commit
 message of the branch, so a `BREAKING CHANGE:` footer in any of them bumps
