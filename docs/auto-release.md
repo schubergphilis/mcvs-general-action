@@ -94,6 +94,7 @@ jobs:
           auto-release: "true"
       - if: steps.release.outputs.tag != ''
         env:
+          GH_REPO: ${{ github.repository }}
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ steps.release.outputs.tag }}
         run: gh workflow run golang-releases.yml --ref "${TAG}"
@@ -102,3 +103,7 @@ jobs:
 The `tag` output is available from v0.10.0; with an older release it is
 always empty and the dispatch never runs. The dispatched run has the tag as
 its ref, so `github.ref_name` is the new version, as on a tag push.
+
+Re-running a job whose dispatch failed does not retry it: the release then
+already exists, so the `tag` output is empty. Dispatch the workflow by hand
+instead, with `gh workflow run golang-releases.yml --ref <tag>`.
