@@ -8,7 +8,7 @@ inputs:
     description: |
       Create the next semver tag and its GitHub Release on a push to the
       default branch. The job needs contents: write. When "true",
-      testing-type may be omitted.
+      testing-type may be omitted. Never releases in a fork.
   graphql-linter-config-path:
     default: ""
     description: |
@@ -36,7 +36,7 @@ outputs:
   tag:
     description: |
       The tag that auto-release created in this run, e.g. v1.2.3. Empty when
-      nothing was released, or when the release already existed.
+      nothing was released, when the release already existed, or in a fork.
     value: ${{ steps.release.outputs.tag }}
 runs:
   using: composite
@@ -183,10 +183,25 @@ runs:
           -r "${GITHUB_ACTION_PATH}/configs/requirements.txt"
         yamllint -c "${GITHUB_ACTION_PATH}/configs/yamllint.yaml" .
       shell: bash
+    # The upstream repository is leading for tags and releases: a fork that
+    # syncs its default branch would otherwise release on its own, and its
+    # tags and releases would no longer match upstream's.
     - if: |
         github.event_name == 'push' &&
         github.ref_name == github.event.repository.default_branch &&
-        inputs.auto-release == 'true'
+        inputs.auto-release == 'true' &&
+        github.event.repository.fork
+      name: skip auto-release in a fork 🍴
+      run: |
+        msg="auto-release is skipped because this repository is a fork;"
+        msg+=" the upstream repository is leading for tags and releases"
+        echo "::notice::${msg}"
+      shell: bash
+    - if: |
+        github.event_name == 'push' &&
+        github.ref_name == github.event.repository.default_branch &&
+        inputs.auto-release == 'true' &&
+        !github.event.repository.fork
       name: check out the full history 🌳
       # yamllint disable-line rule:line-length
       uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -196,7 +211,8 @@ runs:
     - if: |
         github.event_name == 'push' &&
         github.ref_name == github.event.repository.default_branch &&
-        inputs.auto-release == 'true'
+        inputs.auto-release == 'true' &&
+        !github.event.repository.fork
       name: create a tag and a release 🏷️
       id: release
       env:

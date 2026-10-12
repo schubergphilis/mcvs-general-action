@@ -118,6 +118,12 @@ already there, so a caller can dispatch its asset-building workflow on the
 new tag (`docs/auto-release.md`): the tag, created with `GITHUB_TOKEN`,
 starts no workflow by itself.
 
+In a fork (`github.event.repository.fork`) the two auto-release steps are
+skipped and a third step logs a `::notice::` instead: the upstream
+repository is leading for tags and releases, and a fork that syncs its
+default branch would otherwise release on its own. Keep it without an
+override input.
+
 Three things in this step are load-bearing and have each already caused a
 bug:
 
