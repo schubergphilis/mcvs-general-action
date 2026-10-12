@@ -47,18 +47,18 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
       - uses: schubergphilis/mcvs-general-action@b6632aeb1211ae627878eda34660ddb8accbbcfb # v0.8.0
         with:
           auto-release: "true"
 ```
 
 The job needs `contents: write`, and the `concurrency` group serialises two
-pushes that land in quick succession. Keep it in its own workflow rather
-than adding it to a matrix: matrix jobs that race to create the same tag do
-not fail, but each of them needs `contents: write`.
+pushes that land in quick succession. It needs no `actions/checkout` step:
+on that push the action checks out the full history itself, with
+`persist-credentials: false`. Keep it in its own workflow rather than adding
+it to a matrix: matrix jobs that race to create the same tag do not fail, but
+each of them needs `contents: write`.
 
-This repository releases itself the same way, see
+This repository releases itself the same way, with a checkout because it uses
+the action from its own checkout (`uses: $/`), see
 [`.github/workflows/tag.yml`](../.github/workflows/tag.yml).
