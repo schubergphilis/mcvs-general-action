@@ -1,0 +1,27 @@
+---
+name: graphql-linter-updater
+"on":
+  schedule:
+    - cron: 17 6 * * 1
+  workflow_dispatch:
+concurrency:
+  cancel-in-progress: false
+  group: graphql-linter-updater
+permissions:
+  contents: read
+jobs:
+  graphql-linter-updater:
+    permissions:
+      # dispatches general.yml on the branch, see the script
+      actions: write
+      contents: write
+      pull-requests: write
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: scripts/graphql-linter-updater.sh
