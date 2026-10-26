@@ -26,6 +26,12 @@ inputs:
       lint-links, markdownlint or yamllint. Required unless auto-release is
       "true".
     required: false
+  yamllint-ignore:
+    default: ""
+    description: |
+      Extra paths for the yamllint testing-type to skip, one gitignore-style
+      pattern per line, e.g. generated lock files. They are added to the
+      company ignore list in configs/yamllint.yaml, never replace it.
   zizmor-action-advanced-security:
     default: "true"
     description: |
@@ -178,10 +184,13 @@ runs:
           **/*.md
           !**/node_modules/**
     - if: inputs.testing-type == 'yamllint'
+      env:
+        YAMLLINT_IGNORE: ${{ inputs.yamllint-ignore }}
       run: |
         python3 -m pip install --require-hashes --user \
           -r "${GITHUB_ACTION_PATH}/configs/requirements.txt"
-        yamllint -c "${GITHUB_ACTION_PATH}/configs/yamllint.yaml" .
+        "${GITHUB_ACTION_PATH}/scripts/yamllint.sh" \
+          "${GITHUB_ACTION_PATH}/configs/yamllint.yaml"
       shell: bash
     # The upstream repository is leading for tags and releases: a fork that
     # syncs its default branch would otherwise release on its own, and its
