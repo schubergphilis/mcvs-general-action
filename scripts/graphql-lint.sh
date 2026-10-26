@@ -9,7 +9,7 @@
 #   gh api repos/schubergphilis/graphql-linter/releases/tags/<version> \
 #     --jq '.assets[] | "\(.digest) \(.name)"'
 
-GRAPHQL_LINTER_VERSION=v0.2.5
+GRAPHQL_LINTER_VERSION=v0.5.0
 GRAPHQL_LINTER_RELEASES=https://github.com/schubergphilis/graphql-linter/releases
 
 # Print the release asset suffix for this machine, e.g. linux-amd64.
@@ -33,9 +33,9 @@ platform() {
 # statement rather than an associative array: macOS runners ship bash 3.2.
 sha256_for() {
   case "$1" in
-  darwin-arm64) echo 0eb6445887bd1c9e7e366c5de4a4befd6449dc7c2cb6de807265a4e38c836813 ;;
-  linux-amd64) echo c907549f31e16da2f9e44f74837f69acec715955cd4e2858e5f38c37210d8acf ;;
-  linux-arm64) echo f5de8d201279dedd827b4562bc4331c83a6e6cc6d507a5b7b10aa50428e5add6 ;;
+  darwin-arm64) echo 65d2228d43504cadb6758d5137e236741bab470565fe1b53c0647708aedfc441 ;;
+  linux-amd64) echo cba6eff98cd4d18b5a228c6ea75b8bad73b2190b65949808e41b943ace112f05 ;;
+  linux-arm64) echo b12c3dfbd89bf48bc7f7014768125dc58f7790ffcc82a51f18380e3ec1cb1d0e ;;
   *)
     echo "❗ no pinned graphql-linter digest for '$1'" >&2
     return 1
