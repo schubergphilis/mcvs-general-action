@@ -61,3 +61,15 @@ Set one of these values as the `testing-type` input, see
   - Checks all YAML files against formatting standards
   - Uses hash-pinned dependencies for security
   - Configuration: `configs/yamllint.yaml`
+  - Lints from the repository root; list generated files it must skip, such
+    as a package manager's lock file, in `yamllint-ignore`, one
+    gitignore-style pattern per line. They are added to the company ignore
+    list, which keeps applying:
+
+    ```yml
+    - uses: schubergphilis/mcvs-general-action@<sha> # v0.12.0
+      with:
+        testing-type: yamllint
+        yamllint-ignore: |
+          web/pnpm-lock.yaml
+    ```

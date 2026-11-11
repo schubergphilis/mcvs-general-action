@@ -72,6 +72,13 @@ when adding or renaming a testing type.
 1. **yamllint**: Validates YAML file formatting
    - Uses hash-pinned dependencies for security (see below)
    - Configuration: `configs/yamllint.yaml`
+   - Implemented in `scripts/yamllint.sh`, covered by `tests/yamllint.bats`
+     (the `bats` job installs `configs/requirements.txt` for it)
+   - Input: `yamllint-ignore`, extra gitignore-style patterns added to the
+     company ignore list. The script writes the merged configuration in full
+     to `$RUNNER_TEMP`; never switch to an `extends:` file, because yamllint
+     lets a parent's `ignore` win over the child's, which silently drops the
+     caller's patterns
 
 1. **graphql-lint**: Lints GraphQL schemas with
    [graphql-linter](https://github.com/schubergphilis/graphql-linter)
