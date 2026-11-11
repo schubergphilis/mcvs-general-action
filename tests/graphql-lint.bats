@@ -104,7 +104,7 @@ fake_digest_of() {
 
   run install_graphql_linter "$BATS_TEST_TMPDIR"
   [ "$status" -eq 1 ]
-  [[ "$output" == *"expected c907549f"* ]]
+  [[ "$output" == *"expected $(sha256_for linux-amd64)"* ]]
   [ ! -e "${BATS_TEST_TMPDIR}/graphql-linter" ]
   [ ! -e "${BATS_TEST_TMPDIR}/graphql-linter.download" ]
 }
@@ -118,7 +118,7 @@ fake_digest_of() {
 
   run install_graphql_linter "$BATS_TEST_TMPDIR"
   [ "$status" -eq 1 ]
-  grep -q "/download/v0.2.5/graphql-linter-v0.2.5-linux-arm64$" \
+  grep -q "/download/${GRAPHQL_LINTER_VERSION}/graphql-linter-${GRAPHQL_LINTER_VERSION}-linux-arm64$" \
     "${BATS_TEST_TMPDIR}/curl-args"
 }
 

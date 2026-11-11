@@ -14,7 +14,7 @@ Set one of these values as the `testing-type` input, see
     files of each directory are checked together as one schema
   - Configuration: `.graphql-linter.yml` or `.graphql-linter.yaml`, or
     `graphql-linter-config-path`, see `configuration.md` in the graphql-linter
-    [documentation](https://github.com/schubergphilis/graphql-linter/tree/v0.2.5/docs)
+    [documentation](https://github.com/schubergphilis/graphql-linter/tree/v0.5.0/docs)
   - Fails when no schema file is found, so only add it where there are
     schemas
 
